@@ -23,7 +23,7 @@ A github repo (https://github.com/hajdulajos668/imdb-project.git)
 
 ### 2. környezeti változók beállítása a Backend-en
 
-Hozz létre egy '.env' fájl a '.env.example' alapján és írd be a portokat, adatbázis nevét és ments rá.
+Hozz létre egy '.env' fájl a 'env.example' alapján és írd be a portokat, adatbázis nevét és ments rá.
 
 ### 3. Backend server futtatás
 
