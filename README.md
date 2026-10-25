@@ -4,7 +4,7 @@ Egy webes alkalmazás filmek böngészésére, keresésére és értékelésére
 
 ---
 
-## 🛠️ Használt Technológiák
+## Használt Technológiák
 
 - **Frontend:** React, HTML5, CSS3 / Tailwind, Axios
 - **Backend:** Node.js, Express.js
