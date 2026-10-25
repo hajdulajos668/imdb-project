@@ -23,8 +23,8 @@ app.get('/api/movies', async (req, res) => {
 		res.status(500).json({ error: 'Database error' });
 	}
 });
-
-// GET: Fetch all users
+/*
+// ez majd a userek lesznek
 app.get('/users', async (req, res) => {
 	try {
 		const [rows] = await db.query('SELECT * FROM users');
@@ -57,6 +57,7 @@ app.post('/usersup', async (req, res) => {
 		res.status(500).json({ error: 'Database error' });
 	}
 });
+*/
 
 // Server start
 const PORT = process.env.PORT || 3000;
