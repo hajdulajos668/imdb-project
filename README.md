@@ -32,3 +32,6 @@ Lépj be a my_Backend mappába és nyiss egy terminált, add ki a 'npm install' 
 ### 4. Frontend futtatása
 
 Lépj be a my_Frontend mappába és nyiss egy terminált, add ki a 'npm install' parancsot. Majd az 'npm run dev' parancsot. Innen is látod a Frontend portját
+
+### 5. Adatbázis importálása
+A xampp alkalmazáson belül  phpMyAdmin indítsd el az apache és MySQL szolgáltatásokat. Majd a phpMyAdmin weboldalán hozz létre egy 'mydb' nevű üres adatbázist és ebbe importáld be a táblákat amit a my_Backend/db mappában találsz
