@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api';
 
 function Startpage() {
@@ -55,9 +56,10 @@ function Startpage() {
 
 			<div className=' grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
 				{filteredMovies.map((movie) => (
-					<div
+					<Link
+						to={`/movie/${movie.id}`}
 						key={movie.id}
-						className='p-6 card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300'
+						className='p-6 card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 block text-left'
 					>
 						<figure>
 							<img
@@ -78,7 +80,7 @@ function Startpage() {
 								{movie.description || 'Nincs elérhető leírás a filmhez.'}
 							</p>
 						</div>
-					</div>
+					</Link>
 				))}
 			</div>
 		</div>
