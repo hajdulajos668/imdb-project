@@ -15,6 +15,7 @@ function App() {
 				<AppNavbar />
 				<Routes>
 					<Route path='/' element={<Startpage />} />
+					<Route path='/movie/:id' element={<MovieDetails />} />
 				</Routes>
 			</div>
 		</Router>
