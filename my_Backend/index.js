@@ -23,6 +23,24 @@ app.get('/api/movies', async (req, res) => {
 		res.status(500).json({ error: 'Database error' });
 	}
 });
+
+// Egy konkrét film lekérdezése ID alapján
+app.get('/api/movies/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const [rows] = await db.query('SELECT * FROM movies WHERE id = ?', [id]);
+
+		if (rows.length === 0) {
+			return res.status(404).json({ error: 'A film nem található' });
+		}
+
+		res.json(rows[0]);
+	} catch (error) {
+		console.error('Adatbázis hiba:', error);
+		res.status(500).json({ error: 'Database error' });
+	}
+});
+
 /*
 // ez majd a userek lesznek
 app.get('/users', async (req, res) => {
