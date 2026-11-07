@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const db = require('./db');
+const bcrypt = require('bcrypt');
 
 const cors = require('cors');
 const app = express();
@@ -41,41 +42,84 @@ app.get('/api/movies/:id', async (req, res) => {
 	}
 });
 
-/*
-// ez majd a userek lesznek
-app.get('/users', async (req, res) => {
-	try {
-		const [rows] = await db.query('SELECT * FROM users');
-		res.json(rows);
-	} catch (error) {
-		console.error(error);
-		res.status(500).json({ error: 'Database error' });
-	}
-});
+//user regisztráció
+app.post('/api/register', async (req, res) => {
+	console.log('1. Kérés érkezett:', req.body);
+	const { name, email, password } = req.body;
 
-// POST: Create a new user
-app.post('/usersup', async (req, res) => {
-	const { name, email } = req.body;
-
-	if (!name || !email) {
-		return res.status(400).json({ error: 'Name and email are required' });
+	if (!name || !email || !password) {
+		return res.status(400).json({ error: 'Minden mező kitöltése kötelező!' });
 	}
 
 	try {
-		const [result] = await db.query(
-			'INSERT INTO users (name, email) VALUES (?, ?)',
-			[name, email], // Using parameterized queries to prevent SQL injection
-		);
-		res.status(201).json({ id: result.insertId, name, email });
-	} catch (error) {
-		console.error(error);
-		if (error.code === 'ER_DUP_ENTRY') {
-			return res.status(409).json({ error: 'Email already exists' });
+		console.log('2. Adatbázis keresés indul...');
+
+		const [results] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+
+		console.log('3. Adatbázis válaszolt! Találatok száma:', results.length);
+
+		if (results.length > 0) {
+			return res.status(409).json({ error: 'Ez az email cím már regisztrálva van!' });
 		}
-		res.status(500).json({ error: 'Database error' });
+
+		console.log('4. Jelszó titkosítása...');
+		const hashedPassword = await bcrypt.hash(password, 10);
+
+		console.log('5. Mentés az adatbázisba...');
+		await db.query('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [
+			name,
+			email,
+			hashedPassword,
+		]);
+
+		console.log('6. Sikeres mentés!');
+		return res.status(201).json({ message: 'Sikeres regisztráció!' });
+
+	} catch (error) {
+		console.error('KRITIKUS HIBA A REGISZTRÁCIÓNÁL:', error);
+		return res.status(500).json({ error: 'Belső szerverhiba történt.' });
 	}
 });
-*/
+
+// user bejelentkezés
+app.post('/api/login', async (req, res) => {
+	console.log('Bejelentkezési kísérlet:', req.body.email);
+	const { email, password } = req.body;
+
+	if (!email || !password) {
+		return res.status(400).json({ error: 'Minden mező kitöltése kötelező!' });
+	}
+
+	try {
+		const [results] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+
+		if (results.length === 0) {
+			return res.status(401).json({ error: 'Hibás email cím vagy jelszó!' });
+		}
+
+		const user = results[0];
+
+		const isMatch = await bcrypt.compare(password, user.password);
+
+		if (!isMatch) {
+			return res.status(401).json({ error: 'Hibás email cím vagy jelszó!' });
+		}
+
+		console.log('Sikeres bejelentkezés:', user.email);
+
+		return res.status(200).json({
+			message: 'Sikeres bejelentkezés!',
+			user: {
+				id: user.id,
+				name: user.name,
+				email: user.email,
+			},
+		});
+	} catch (error) {
+		console.error('Kritikus hiba bejelentkezéskor:', error);
+		return res.status(500).json({ error: 'Belső szerverhiba történt.' });
+	}
+});
 
 // Server start
 const PORT = process.env.PORT || 3000;
