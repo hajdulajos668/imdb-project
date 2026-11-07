@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 24, 2026 at 03:56 PM
+-- Generation Time: Nov 07, 2026 at 05:43 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -72,19 +72,20 @@ INSERT INTO `movies` (`id`, `title`, `description`, `release_date`, `genre`, `po
 --
 
 CREATE TABLE `users` (
-  `id` int(30) NOT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `email` varchar(255) DEFAULT NULL
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`) VALUES
-(1, 'valami1', 'valami@gmail.com'),
-(2, 'Valami2', 'valami2@gmail.com'),
-(3, 'valami3', 'valami3@gmail.com');
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `created_at`) VALUES
+(1, 'aaa', 'aaa@gmail.com', '$2b$10$RatPzfDydXcA6O5pLNUuEuLWQ9ybxssDYaCbvNW8ESoGvIwXzw6hK', '2026-11-07 16:06:32'),
+(2, 'aaa', 'aaaa@gmail.com', '$2b$10$bTx6TTCT.EWzXfhWgNAtFO1APCsHGbVdK96EiZHenPner0KezOlQy', '2026-11-07 16:20:00');
 
 --
 -- Indexes for dumped tables
@@ -117,7 +118,7 @@ ALTER TABLE `movies`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
