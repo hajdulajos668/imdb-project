@@ -23,24 +23,25 @@ function Startpage() {
 
 		fetchMovies();
 	}, []);
-
+	//Összes műfaj kigyűjtése
 	const uniqueGenres = ['Minden', ...new Set(movies.map((movie) => movie.genre).filter(Boolean))];
-
+	//Összes megjelenési év kigyűjtése
 	const extractedYears = movies
 		.map((movie) => (movie.release_date ? movie.release_date.substring(0, 4) : null))
 		.filter(Boolean);
 	const uniqueYears = ['Minden', ...[...new Set(extractedYears)].sort((a, b) => b - a)];
-
+	//Maga a szűrés
 	const filteredMovies = movies.filter((movie) => {
+		//Műfaj vizsgálat
 		const matchGenre = selectedGenre === 'Minden' || movie.genre === selectedGenre;
-
+		//megjelenési idő vizsgálat
 		const movieYear = movie.release_date ? movie.release_date.substring(0, 4) : null;
 		const matchYear = selectedYear === 'Minden' || movieYear === selectedYear;
-
+		//Cím vizsgálat
 		const matchTitle = movie.title
 			? movie.title.toLowerCase().includes(searchTerm.toLowerCase())
 			: false;
-
+		//Vissza adja a találatot
 		return matchGenre && matchYear && matchTitle;
 	});
 
@@ -97,7 +98,7 @@ function Startpage() {
 					<Link
 						to={`/movie/${movie.id}`}
 						key={movie.id}
-						className='p-6 card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 block text-left'
+						className='p-6 card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300'
 					>
 						<figure>
 							<img
@@ -106,11 +107,11 @@ function Startpage() {
 									'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.vecteezy.com%2Fsystem%2Fresources%2Fpreviews%2F048%2F910%2F778%2Fnon_2x%2Fdefault-image-missing-placeholder-free-vector.jpg&f=1&nofb=1&ipt=93339020a140657a560ee8c01ec1a6a81156aded326d1ae7d41e8912d97d5896&ipo=images'
 								}
 								alt={movie.title || 'Film poszter'}
-								className='h-72 object-cover w-full'
+								className='h-72 object-cover'
 							/>
 						</figure>
 						<div className='card-body'>
-							<h2 className='card-title'>
+							<h2 className='card-title justify-center text-center'>
 								{movie.title || 'Ismeretlen cím'}
 								{movie.isNew === 1 && <div className='badge badge-secondary ml-3'>ÚJ</div>}
 							</h2>
