@@ -3,6 +3,18 @@ import { Link } from 'react-router-dom';
 
 function AppNavbar() {
 	const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('user'));
+	const closeDropdown = () => {
+		const elem = document.activeElement;
+		if (elem) {
+			elem.blur();
+		}
+	};
+	const handleLogout = () => {
+		localStorage.removeItem('user');
+		setIsLoggedIn(false);
+		closeDropdown();
+		window.location.href = '/';
+	};
 
 	return (
 		<div className='navbar bg-base-100 shadow-sm'>
@@ -32,17 +44,19 @@ function AppNavbar() {
 						{isLoggedIn ? (
 							<>
 								<li>
-									<Link to='/profile' className='justify-between'>
+									<Link to='/profile' onClick={closeDropdown} className='justify-between'>
 										Profile
 									</Link>
 								</li>
 								<li>
-									<button onClick={() => setIsLoggedIn(false)}>Logout</button>
+									<button onClick={handleLogout}>Logout</button>
 								</li>
 							</>
 						) : (
 							<li>
-								<Link to='/login'>Login</Link>
+								<Link to='/login' onClick={closeDropdown}>
+									Login
+								</Link>
 							</li>
 						)}
 					</ul>
