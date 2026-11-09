@@ -4,6 +4,7 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import AppNavbar from './Components/Navbar.jsx';
 import Loginpage from './Pages/Loginpage.jsx';
 import MovieDetails from './Pages/Moviedetails.jsx';
+import Profilepage from './Pages/Profilepage.jsx';
 import Registerpage from './Pages/Registerpage';
 import Startpage from './Pages/Startpage';
 
@@ -21,6 +22,7 @@ function App() {
 					<Route path='/movie/:id' element={<MovieDetails />} />
 					<Route path='/login' element={<Loginpage />} />
 					<Route path='/register' element={<Registerpage />} />
+					<Route path='/profile' element={<Profilepage />} />
 				</Routes>
 			</div>
 		</Router>
