@@ -10,7 +10,8 @@ import Startpage from './Pages/Startpage';
 
 function App() {
 	useEffect(() => {
-		document.title = 'FilmekProj';
+		document.title = 'FilmekProjekt';
+		document.querySelector("link[rel~='icon']").href = '/movie-reel.png';
 	}, []);
 
 	return (
