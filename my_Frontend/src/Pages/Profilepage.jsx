@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../api';
 
 function Profilepage() {
 	const [user, setUser] = useState(null);
@@ -34,6 +35,19 @@ function Profilepage() {
 	const [watchlist, setWatchlist] = useState([]);
 
 	const navigate = useNavigate();
+
+	useEffect(() => {
+		try {
+			const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+			if (savedUser.id) {
+				api.get(`/api/watchlist/${savedUser.id}`)
+					.then((response) => setWatchlist(response.data))
+					.catch((err) => console.error('Hiba a watchlist lekérésekor:', err));
+			}
+		} catch (err) {
+			console.error(err);
+		}
+	}, []);
 
 	return (
 		<div className='min-h-screen text-white p-6'>
@@ -71,15 +85,15 @@ function Profilepage() {
 									key={movie.id}
 									className='bg-gray-700 p-4 rounded border border-gray-600 flex items-center space-x-3'
 								>
-									{movie.movie_image && (
+									{movie.poster_url && (
 										<img
-											src={movie.movie_image}
-											alt={movie.movie_title}
+											src={movie.poster_url}
+											alt={movie.title}
 											className='w-12 h-16 object-cover rounded'
 										/>
 									)}
 									<div>
-										<h4 className='font-semibold text-sm'>{movie.movie_title}</h4>
+										<h4 className='font-semibold text-sm'>{movie.title}</h4>
 									</div>
 								</div>
 							))}
@@ -98,17 +112,18 @@ function Profilepage() {
 							{watchlist.map((movie) => (
 								<div
 									key={movie.id}
-									className='bg-gray-700 p-4 rounded border border-gray-600 flex items-center space-x-3'
+									onClick={() => navigate(`/movie/${movie.id}`)}
+									className='bg-gray-700 p-4 rounded border border-gray-600 flex items-center space-x-3 cursor-pointer hover:bg-gray-600 transition'
 								>
-									{movie.movie_image && (
+									{movie.poster_url && (
 										<img
-											src={movie.movie_image}
-											alt={movie.movie_title}
+											src={movie.poster_url}
+											alt={movie.title}
 											className='w-12 h-16 object-cover rounded'
 										/>
 									)}
 									<div>
-										<h4 className='font-semibold text-sm'>{movie.movie_title}</h4>
+										<h4 className='font-semibold text-sm'>{movie.title}</h4>
 									</div>
 								</div>
 							))}
