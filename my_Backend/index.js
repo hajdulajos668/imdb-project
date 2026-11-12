@@ -121,6 +121,63 @@ app.post('/api/login', async (req, res) => {
 	}
 });
 
+//Egy felhasználó watchlist lekérdezése
+app.get('/api/watchlist/:userId', async (req, res) => {
+	try {
+		const { userId } = req.params;
+		const [rows] = await db.query(
+			`SELECT m.*, w.added_at 
+			 FROM watchlist w 
+			 JOIN movies m ON w.movie_id = m.id 
+			 WHERE w.user_id = ? 
+			 ORDER BY w.added_at DESC`,
+			[userId]
+		);
+		res.json(rows);
+	} catch (error) {
+		console.error('Hiba a watchlist lekérdezésekor:', error);
+		res.status(500).json({ error: 'Adatbázis hiba' });
+	}
+});
+
+// Film hozzáadása a watchlisthez
+app.post('/api/watchlist', async (req, res) => {
+	const { user_id, movie_id } = req.body;
+
+	if (!user_id || !movie_id) {
+		return res.status(400).json({ error: 'Hiányzó user_id vagy movie_id!' });
+	}
+
+	try {
+		await db.query('INSERT INTO watchlist (user_id, movie_id) VALUES (?, ?)', [
+			user_id,
+			movie_id,
+		]);
+		res.status(201).json({ message: 'Film hozzáadva a megtekintendőkhöz!' });
+	} catch (error) {
+		if (error.code === 'ER_DUP_ENTRY') {
+			return res.status(409).json({ error: 'Ez a film már szerepel a listádon!' });
+		}
+		console.error('Hiba a watchlisthez adáskor:', error);
+		res.status(500).json({ error: 'Adatbázis hiba' });
+	}
+});
+
+// Film eltávolítása a watchlistről
+app.delete('/api/watchlist/:userId/:movieId', async (req, res) => {
+	try {
+		const { userId, movieId } = req.params;
+		await db.query('DELETE FROM watchlist WHERE user_id = ? AND movie_id = ?', [
+			userId,
+			movieId,
+		]);
+		res.json({ message: 'Film eltávolítva a listáról!' });
+	} catch (error) {
+		console.error('Hiba a watchlistről való törléskor:', error);
+		res.status(500).json({ error: 'Adatbázis hiba' });
+	}
+});
+
 // Server start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
