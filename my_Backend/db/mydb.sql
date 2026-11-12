@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Nov 07, 2026 at 05:43 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Gép: 127.0.0.1
+-- Létrehozás ideje: 2026. Nov 12. 16:14
+-- Kiszolgáló verziója: 10.4.28-MariaDB
+-- PHP verzió: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `mydb`
+-- Adatbázis: `mydb`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `movies`
+-- Tábla szerkezet ehhez a táblához `movies`
 --
 
 CREATE TABLE `movies` (
@@ -38,7 +38,7 @@ CREATE TABLE `movies` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `movies`
+-- A tábla adatainak kiíratása `movies`
 --
 
 INSERT INTO `movies` (`id`, `title`, `description`, `release_date`, `genre`, `poster_url`, `isNew`) VALUES
@@ -68,57 +68,104 @@ INSERT INTO `movies` (`id`, `title`, `description`, `release_date`, `genre`, `po
 -- --------------------------------------------------------
 
 --
--- Table structure for table `users`
+-- Tábla szerkezet ehhez a táblához `users`
 --
 
 CREATE TABLE `users` (
-  `id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `id` int(30) NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `password` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `users`
+-- A tábla adatainak kiíratása `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `created_at`) VALUES
-(1, 'aaa', 'aaa@gmail.com', '$2b$10$RatPzfDydXcA6O5pLNUuEuLWQ9ybxssDYaCbvNW8ESoGvIwXzw6hK', '2026-11-07 16:06:32'),
-(2, 'aaa', 'aaaa@gmail.com', '$2b$10$bTx6TTCT.EWzXfhWgNAtFO1APCsHGbVdK96EiZHenPner0KezOlQy', '2026-11-07 16:20:00');
+INSERT INTO `users` (`id`, `name`, `email`, `password`) VALUES
+(1, 'valami1', 'valami@gmail.com', ''),
+(2, 'Valami2', 'valami2@gmail.com', ''),
+(3, 'valami3', 'valami3@gmail.com', ''),
+(5, 'eeeeeee', 'valami123@gmail.com', '$2b$10$0jCzMubgtxC/ndc/v3hRAe4Fk8FqjwpW7v4dUgwaRyXR3aJPztKp2'),
+(6, 'eeeeeeeeeee', 'valami1234@gmail.com', '$2b$10$8Cnv.ctOQVzl/zQ3gaedVOShucBEBwbkhgZ8yRT/A75xA9dkInnPu');
+
+-- --------------------------------------------------------
 
 --
--- Indexes for dumped tables
+-- Tábla szerkezet ehhez a táblához `watchlist`
+--
+
+CREATE TABLE `watchlist` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `movie_id` int(11) NOT NULL,
+  `added_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `watchlist`
+--
+
+INSERT INTO `watchlist` (`id`, `user_id`, `movie_id`, `added_at`) VALUES
+(14, 6, 1, '2026-11-12 14:25:45');
+
+--
+-- Indexek a kiírt táblákhoz
 --
 
 --
--- Indexes for table `movies`
+-- A tábla indexei `movies`
 --
 ALTER TABLE `movies`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `users`
+-- A tábla indexei `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- A tábla indexei `watchlist`
+--
+ALTER TABLE `watchlist`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_user_movie` (`user_id`,`movie_id`),
+  ADD KEY `movie_id` (`movie_id`);
+
+--
+-- A kiírt táblák AUTO_INCREMENT értéke
 --
 
 --
--- AUTO_INCREMENT for table `movies`
+-- AUTO_INCREMENT a táblához `movies`
 --
 ALTER TABLE `movies`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
--- AUTO_INCREMENT for table `users`
+-- AUTO_INCREMENT a táblához `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT a táblához `watchlist`
+--
+ALTER TABLE `watchlist`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- Megkötések a kiírt táblákhoz
+--
+
+--
+-- Megkötések a táblához `watchlist`
+--
+ALTER TABLE `watchlist`
+  ADD CONSTRAINT `watchlist_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `watchlist_ibfk_2` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
