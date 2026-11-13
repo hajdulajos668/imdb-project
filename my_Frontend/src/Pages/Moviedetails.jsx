@@ -11,29 +11,46 @@ function MovieDetails() {
 	const [inWatchlist, setInWatchlist] = useState(false);
 	const [watchlistMsg, setWatchlistMsg] = useState('');
 
+	// Új state-ek az értékelésekhez
+	const [ratingsData, setRatingsData] = useState({ ratings: [], averageRating: 0, totalVotes: 0 });
+	const [userRating, setUserRating] = useState(5); // Alapértelmezett értékelési érték (1-5)
+	const [ratingMsg, setRatingMsg] = useState('');
+
 	const user = JSON.parse(localStorage.getItem('user'));
 
-	useEffect(() => {
-		const fetchMovieAndStatus = async () => {
-			try {
-				const response = await api.get(`/api/movies/${id}`);
-				setMovie(response.data);
+	const fetchData = async () => {
+		try {
+			setLoading(true);
+			// Film adatok lekérése
+			const movieRes = await api.get(`/api/movies/${id}`);
+			setMovie(movieRes.data);
 
-				if (user) {
-					const wlRes = await api.get(`/api/watchlist/${user.id}`);
-					const exists = wlRes.data.some((item) => item.id === Number(id));
-					setInWatchlist(exists);
+			// Értékelések lekérése
+			const ratingsRes = await api.get(`/api/ratings/${id}`);
+			setRatingsData(ratingsRes.data);
+
+			// Ha be van jelentkezve a user, ellenőrizzük, hogy értékelt-e már
+			if (user) {
+				const existingVote = ratingsRes.data.ratings.find((r) => r.user_id === user.id);
+				if (existingVote) {
+					setUserRating(existingVote.rating);
 				}
-			} catch (err) {
-				console.error('Hiba a film adatainak lekérésekor:', err);
-				setError('Nem sikerült betölteni a film adatait.');
-			} finally {
-				setLoading(false);
-			}
-		};
 
+				const wlRes = await api.get(`/api/watchlist/${user.id}`);
+				const exists = wlRes.data.some((item) => item.id === Number(id));
+				setInWatchlist(exists);
+			}
+		} catch (err) {
+			console.error('Hiba az adatok lekérésekor:', err);
+			setError('Nem sikerült betölteni a film adatait.');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
 		if (id) {
-			fetchMovieAndStatus();
+			fetchData();
 		}
 	}, [id, user?.id]);
 
@@ -63,6 +80,51 @@ function MovieDetails() {
 		}
 	};
 
+	// Értékelés elküldése / módosítása
+	const handleRatingSubmit = async (e) => {
+		e.preventDefault();
+		if (!user) {
+			navigate('/login');
+			return;
+		}
+
+		try {
+			await api.post('/api/ratings', {
+				user_id: user.id,
+				movie_id: movie.id,
+				rating: Number(userRating),
+			});
+			setRatingMsg('Értékelés sikeresen elmentve!');
+			setTimeout(() => setRatingMsg(''), 3000);
+
+			// Frissítjük az értékeléseket, hogy az átlag azonnal frissüljön
+			const ratingsRes = await api.get(`/api/ratings/${id}`);
+			setRatingsData(ratingsRes.data);
+		} catch (err) {
+			console.error('Hiba az értékelés mentésekor:', err);
+			setRatingMsg(err.response?.data?.error || 'Hiba történt az értékelés során.');
+		}
+	};
+
+	// Értékelés törlése
+	const handleRatingDelete = async () => {
+		if (!user) return;
+
+		try {
+			await api.delete(`/api/ratings/${user.id}/${movie.id}`);
+			setRatingMsg('Értékelés törölve.');
+			setTimeout(() => setRatingMsg(''), 3000);
+			setUserRating(5);
+
+			// Újratöltjük az adatokat
+			const ratingsRes = await api.get(`/api/ratings/${id}`);
+			setRatingsData(ratingsRes.data);
+		} catch (err) {
+			console.error('Hiba az értékelés törlésekor:', err);
+			setRatingMsg('Nem sikerült törölni az értékelést.');
+		}
+	};
+
 	if (loading) {
 		return (
 			<div className='flex flex-col justify-center items-center min-h-[60vh] gap-3'>
@@ -89,6 +151,7 @@ function MovieDetails() {
 		'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.vecteezy.com%2Fsystem%2Fresources%2Fpreviews%2F048%2F910%2F778%2Fnon_2x%2Fdefault-image-missing-placeholder-free-vector.jpg&f=1&nofb=1&ipt=93339020a140657a560ee8c01ec1a6a81156aded326d1ae7d41e8912d97d5896&ipo=images';
 
 	const poster = movie.poster_url || defaultPoster;
+	const hasUserVoted = ratingsData.ratings.some((r) => r.user_id === user?.id);
 
 	return (
 		<div className='max-w-5xl mx-auto px-4 py-8'>
@@ -116,9 +179,18 @@ function MovieDetails() {
 					</div>
 					<div className='flex-1 flex flex-col justify-between w-full h-full min-h-[420px]'>
 						<div>
-							<h1 className='text-3xl md:text-4xl font-extrabold text-base-content mb-3'>
-								{movie.title}
-							</h1>
+							<div className='flex flex-wrap justify-between items-start gap-4 mb-3'>
+								<h1 className='text-3xl md:text-4xl font-extrabold text-base-content'>
+									{movie.title}
+								</h1>
+								{/* Globális átlag badge */}
+								<div className='badge badge-lg badge-primary gap-1 font-bold p-3'>
+									⭐ {ratingsData.averageRating} / 5
+									<span className='text-xs opacity-75 font-normal'>
+										({ratingsData.totalVotes} szavazat)
+									</span>
+								</div>
+							</div>
 
 							<div className='flex flex-wrap items-center gap-2 mb-6'>
 								{movie.genre && (
@@ -144,6 +216,7 @@ function MovieDetails() {
 								</p>
 							</div>
 						</div>
+
 						<div className='pt-8 mt-6 border-t border-base-200'>
 							{watchlistMsg && (
 								<div className='alert alert-info py-2 px-4 mb-4 text-sm'>
@@ -151,7 +224,8 @@ function MovieDetails() {
 								</div>
 							)}
 
-							<div className='flex flex-wrap gap-3'>
+							{/* Watchlist és Értékelés gombok/szekció */}
+							<div className='flex flex-wrap gap-3 items-center'>
 								<button
 									onClick={handleWatchlistToggle}
 									className={`btn px-6 ${
@@ -162,8 +236,60 @@ function MovieDetails() {
 								>
 									{inWatchlist ? '✓ Watchlisten van (Eltávolítás)' : '+ Watchlisthez adás'}
 								</button>
+							</div>
 
-								<button className='btn btn-primary px-6'>Értékelés hozzáadása</button>
+							{/* Értékelés szekció */}
+							<div className='mt-6 p-4 bg-base-200/50 rounded-2xl border border-base-200'>
+								<h3 className='text-sm font-bold uppercase tracking-wider text-gray-500 mb-3'>
+									Film értékelése (1 - 5 csillag)
+								</h3>
+
+								{ratingMsg && (
+									<div className='alert alert-success py-2 px-4 mb-3 text-sm'>
+										<span>{ratingMsg}</span>
+									</div>
+								)}
+
+								{user ? (
+									<form
+										onSubmit={handleRatingSubmit}
+										className='flex flex-wrap items-center gap-3'
+									>
+										<select
+											value={userRating}
+											onChange={(e) => setUserRating(e.target.value)}
+											className='select select-bordered select-sm w-32 font-semibold'
+										>
+											<option value='1'>⭐</option>
+											<option value='2'>⭐⭐</option>
+											<option value='3'>⭐⭐⭐</option>
+											<option value='4'>⭐⭐⭐⭐</option>
+											<option value='5'>⭐⭐⭐⭐⭐</option>
+										</select>
+
+										<button type='submit' className='btn btn-sm btn-primary'>
+											{hasUserVoted ? 'Értékelés módosítása' : 'Értékelés leadása'}
+										</button>
+
+										{hasUserVoted && (
+											<button
+												type='button'
+												onClick={handleRatingDelete}
+												className='btn btn-sm btn-error btn-outline'
+											>
+												Értékelés törlése
+											</button>
+										)}
+									</form>
+								) : (
+									<p className='text-sm text-gray-500'>
+										Az értékeléshez kérlek{' '}
+										<Link to='/login' className='text-primary font-semibold underline'>
+											jelentkezz be
+										</Link>
+										!
+									</p>
+								)}
 							</div>
 						</div>
 					</div>
