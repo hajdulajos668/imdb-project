@@ -178,6 +178,82 @@ app.delete('/api/watchlist/:userId/:movieId', async (req, res) => {
 	}
 });
 
+// Értékelések (ratings) rendszer
+
+// 1. Egy film értékeléseinek lekérdezése és az átlag kiszámítása
+app.get('/api/ratings/:movieId', async (req, res) => {
+    try {
+        const { movieId } = req.params;
+        const [rows] = await db.query(
+            `SELECT r.*, u.name as user_name 
+             FROM ratings r 
+             JOIN users u ON r.user_id = u.id 
+             WHERE r.movie_id = ?`,
+            [movieId]
+        );
+
+        // Átlag kiszámítása
+        let averageRating = 0;
+        if (rows.length > 0) {
+            const sum = rows.reduce((acc, curr) => acc + curr.rating, 0);
+            averageRating = (sum / rows.length).toFixed(1); // Pl. 4.2
+        }
+
+        res.json({
+            ratings: rows,
+            averageRating: Number(averageRating),
+            totalVotes: rows.length
+        });
+    } catch (error) {
+        console.error('Hiba az értékelések lekérdezésekor:', error);
+        res.status(500).json({ error: 'Adatbázis hiba' });
+    }
+});
+
+// 2. Értékelés leadása vagy frissítése (Upsert)
+app.post('/api/ratings', async (req, res) => {
+    const { user_id, movie_id, rating } = req.body;
+
+    if (!user_id || !movie_id || !rating) {
+        return res.status(400).json({ error: 'Hiányzó adatok (user_id, movie_id vagy rating)!' });
+    }
+
+    if (rating < 1 || rating > 5) {
+        return res.status(400).json({ error: 'Az értékelésnek 1 és 5 között kell lennie!' });
+    }
+
+    try {
+        // Mivel van UNIQUE kulcsunk (user_id, movie_id), az ON DUPLICATE KEY UPDATE 
+        // automatikusan frissíti a pontszámot, ha a user már értékelte ezt a filmet!
+        await db.query(
+            `INSERT INTO ratings (user_id, movie_id, rating) 
+             VALUES (?, ?, ?) 
+             ON DUPLICATE KEY UPDATE rating = ?`,
+            [user_id, movie_id, rating, rating]
+        );
+
+        res.status(201).json({ message: 'Értékelés sikeresen elmentve!' });
+    } catch (error) {
+        console.error('Hiba az értékelés mentésekor:', error);
+        res.status(500).json({ error: 'Adatbázis hiba' });
+    }
+});
+
+// 3. Értékelés törlése
+app.delete('/api/ratings/:userId/:movieId', async (req, res) => {
+    try {
+        const { userId, movieId } = req.params;
+        await db.query('DELETE FROM ratings WHERE user_id = ? AND movie_id = ?', [
+            userId,
+            movieId,
+        ]);
+        res.json({ message: 'Értékelés sikeresen törölve!' });
+    } catch (error) {
+        console.error('Hiba az értékelés törlésekor:', error);
+        res.status(500).json({ error: 'Adatbázis hiba' });
+    }
+});
+
 // Server start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

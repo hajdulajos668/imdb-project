@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
 -- Gép: 127.0.0.1
--- Létrehozás ideje: 2026. Nov 12. 16:14
--- Kiszolgáló verziója: 10.4.28-MariaDB
--- PHP verzió: 8.2.4
+-- Létrehozás ideje: 2026. Nov 13. 13:10
+-- Kiszolgáló verziója: 10.11.16-MariaDB
+-- PHP verzió: 8.3.36
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -68,6 +68,30 @@ INSERT INTO `movies` (`id`, `title`, `description`, `release_date`, `genre`, `po
 -- --------------------------------------------------------
 
 --
+-- Tábla szerkezet ehhez a táblához `ratings`
+--
+
+CREATE TABLE `ratings` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `movie_id` int(11) NOT NULL,
+  `rating` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `ratings`
+--
+
+INSERT INTO `ratings` (`id`, `user_id`, `movie_id`, `rating`, `created_at`) VALUES
+(2, 7, 1, 4, '2026-11-13 11:13:04'),
+(6, 8, 1, 5, '2026-11-13 11:14:30'),
+(7, 8, 2, 5, '2026-11-13 11:33:16'),
+(8, 7, 2, 4, '2026-11-13 11:33:52');
+
+-- --------------------------------------------------------
+
+--
 -- Tábla szerkezet ehhez a táblához `users`
 --
 
@@ -87,7 +111,9 @@ INSERT INTO `users` (`id`, `name`, `email`, `password`) VALUES
 (2, 'Valami2', 'valami2@gmail.com', ''),
 (3, 'valami3', 'valami3@gmail.com', ''),
 (5, 'eeeeeee', 'valami123@gmail.com', '$2b$10$0jCzMubgtxC/ndc/v3hRAe4Fk8FqjwpW7v4dUgwaRyXR3aJPztKp2'),
-(6, 'eeeeeeeeeee', 'valami1234@gmail.com', '$2b$10$8Cnv.ctOQVzl/zQ3gaedVOShucBEBwbkhgZ8yRT/A75xA9dkInnPu');
+(6, 'eeeeeeeeeee', 'valami1234@gmail.com', '$2b$10$8Cnv.ctOQVzl/zQ3gaedVOShucBEBwbkhgZ8yRT/A75xA9dkInnPu'),
+(7, 'user', 'user@user.com', '$2b$10$t9Q8DXylmUTzcX/GWwxpLuJqYxmSinoXjM2d8xFC62zKIabrdF5I.'),
+(8, 'teszt13', 'teszt@teszt.com', '$2b$10$JJv3/KZbabFxwnpSqcE2vuogKoZteUFt.S3RYcb2V9yFlFT.ZWAdm');
 
 -- --------------------------------------------------------
 
@@ -107,7 +133,8 @@ CREATE TABLE `watchlist` (
 --
 
 INSERT INTO `watchlist` (`id`, `user_id`, `movie_id`, `added_at`) VALUES
-(14, 6, 1, '2026-11-12 14:25:45');
+(14, 6, 1, '2026-11-12 14:25:45'),
+(16, 7, 3, '2026-11-13 10:47:14');
 
 --
 -- Indexek a kiírt táblákhoz
@@ -118,6 +145,14 @@ INSERT INTO `watchlist` (`id`, `user_id`, `movie_id`, `added_at`) VALUES
 --
 ALTER TABLE `movies`
   ADD PRIMARY KEY (`id`);
+
+--
+-- A tábla indexei `ratings`
+--
+ALTER TABLE `ratings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_user_movie` (`user_id`,`movie_id`),
+  ADD KEY `movie_id` (`movie_id`);
 
 --
 -- A tábla indexei `users`
@@ -145,20 +180,33 @@ ALTER TABLE `movies`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
+-- AUTO_INCREMENT a táblához `ratings`
+--
+ALTER TABLE `ratings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT a táblához `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT a táblához `watchlist`
 --
 ALTER TABLE `watchlist`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Megkötések a kiírt táblákhoz
 --
+
+--
+-- Megkötések a táblához `ratings`
+--
+ALTER TABLE `ratings`
+  ADD CONSTRAINT `ratings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `ratings_ibfk_2` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`) ON DELETE CASCADE;
 
 --
 -- Megkötések a táblához `watchlist`
