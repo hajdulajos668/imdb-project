@@ -239,6 +239,20 @@ app.post('/api/ratings', async (req, res) => {
     }
 });
 
+// 3. Értékelés törlése
+app.delete('/api/ratings/:userId/:movieId', async (req, res) => {
+    try {
+        const { userId, movieId } = req.params;
+        await db.query('DELETE FROM ratings WHERE user_id = ? AND movie_id = ?', [
+            userId,
+            movieId,
+        ]);
+        res.json({ message: 'Értékelés sikeresen törölve!' });
+    } catch (error) {
+        console.error('Hiba az értékelés törlésekor:', error);
+        res.status(500).json({ error: 'Adatbázis hiba' });
+    }
+});
 
 // Server start
 const PORT = process.env.PORT || 3000;
