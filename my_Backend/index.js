@@ -254,6 +254,66 @@ app.delete('/api/ratings/:userId/:movieId', async (req, res) => {
     }
 });
 
+// --- KEDVENCEK RENDSZER ---
+
+// 1. Felhasználó kedvenceinek lekérdezése
+app.get('/api/favorites/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const [rows] = await db.query(
+            `SELECT m.*, f.added_at 
+             FROM favorites f 
+             JOIN movies m ON f.movie_id = m.id 
+             WHERE f.user_id = ? 
+             ORDER BY f.added_at DESC`,
+            [userId]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error('Hiba a kedvencek lekérdezésekor:', error);
+        res.status(500).json({ error: 'Adatbázis hiba' });
+    }
+});
+
+// 2. Film hozzáadása a kedvencekhez
+app.post('/api/favorites', async (req, res) => {
+    const { user_id, movie_id } = req.body;
+
+    if (!user_id || !movie_id) {
+        return res.status(400).json({ error: 'Hiányzó user_id vagy movie_id!' });
+    }
+
+    try {
+        await db.query('INSERT INTO favorites (user_id, movie_id) VALUES (?, ?)', [
+            user_id,
+            movie_id,
+        ]);
+        res.status(201).json({ message: 'Film hozzáadva a kedvencekhez!' });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'Ez a film már szerepel a kedvenceid között!' });
+        }
+        console.error('Hiba a kedvencekhez adáskor:', error);
+        res.status(500).json({ error: 'Adatbázis hiba' });
+    }
+});
+
+// 3. Film eltávolítása a kedvencekből
+app.delete('/api/favorites/:userId/:movieId', async (req, res) => {
+    try {
+        const { userId, movieId } = req.params;
+        await db.query('DELETE FROM favorites WHERE user_id = ? AND movie_id = ?', [
+            userId,
+            movieId,
+        ]);
+        res.json({ message: 'Film eltávolítva a kedvencekből!' });
+    } catch (error) {
+        console.error('Hiba a kedvencekből való törléskor:', error);
+        res.status(500).json({ error: 'Adatbázis hiba' });
+    }
+});
+
+
 // Server start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

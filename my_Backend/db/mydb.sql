@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: 127.0.0.1
--- Létrehozás ideje: 2026. Nov 13. 13:10
+-- Létrehozás ideje: 2026. Nov 16. 11:48
 -- Kiszolgáló verziója: 10.11.16-MariaDB
 -- PHP verzió: 8.3.36
 
@@ -20,6 +20,27 @@ SET time_zone = "+00:00";
 --
 -- Adatbázis: `mydb`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `favorites`
+--
+
+CREATE TABLE `favorites` (
+  `user_id` int(11) NOT NULL,
+  `movie_id` int(11) NOT NULL,
+  `added_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `favorites`
+--
+
+INSERT INTO `favorites` (`user_id`, `movie_id`, `added_at`) VALUES
+(7, 1, '2026-11-16 10:36:57'),
+(7, 2, '2026-11-16 10:37:42'),
+(7, 11, '2026-11-16 10:17:30');
 
 -- --------------------------------------------------------
 
@@ -76,18 +97,20 @@ CREATE TABLE `ratings` (
   `user_id` int(11) NOT NULL,
   `movie_id` int(11) NOT NULL,
   `rating` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `review_text` text DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- A tábla adatainak kiíratása `ratings`
 --
 
-INSERT INTO `ratings` (`id`, `user_id`, `movie_id`, `rating`, `created_at`) VALUES
-(2, 7, 1, 4, '2026-11-13 11:13:04'),
-(6, 8, 1, 5, '2026-11-13 11:14:30'),
-(7, 8, 2, 5, '2026-11-13 11:33:16'),
-(8, 7, 2, 4, '2026-11-13 11:33:52');
+INSERT INTO `ratings` (`id`, `user_id`, `movie_id`, `rating`, `created_at`, `review_text`, `updated_at`) VALUES
+(2, 7, 1, 4, '2026-11-13 11:13:04', NULL, '2026-11-16 09:43:31'),
+(6, 8, 1, 5, '2026-11-13 11:14:30', NULL, '2026-11-16 09:43:31'),
+(7, 8, 2, 5, '2026-11-13 11:33:16', NULL, '2026-11-16 09:43:31'),
+(10, 7, 2, 4, '2026-11-16 09:59:42', 'Nagyon tetszett, jó film!', '2026-11-16 09:59:42');
 
 -- --------------------------------------------------------
 
@@ -134,11 +157,17 @@ CREATE TABLE `watchlist` (
 
 INSERT INTO `watchlist` (`id`, `user_id`, `movie_id`, `added_at`) VALUES
 (14, 6, 1, '2026-11-12 14:25:45'),
-(16, 7, 3, '2026-11-13 10:47:14');
+(18, 7, 5, '2026-11-16 10:17:23');
 
 --
 -- Indexek a kiírt táblákhoz
 --
+
+--
+-- A tábla indexei `favorites`
+--
+ALTER TABLE `favorites`
+  ADD PRIMARY KEY (`user_id`,`movie_id`);
 
 --
 -- A tábla indexei `movies`
@@ -183,7 +212,7 @@ ALTER TABLE `movies`
 -- AUTO_INCREMENT a táblához `ratings`
 --
 ALTER TABLE `ratings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT a táblához `users`
@@ -195,7 +224,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT a táblához `watchlist`
 --
 ALTER TABLE `watchlist`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- Megkötések a kiírt táblákhoz
