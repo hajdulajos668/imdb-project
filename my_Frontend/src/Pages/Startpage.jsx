@@ -1,15 +1,96 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
 
+// --- Oldalról benyíló menü (SideMenu) komponens ---
+function SideMenu() {
+	const [isOpen, setIsOpen] = useState(false);
+	const navigate = useNavigate();
+
+	return (
+		<div className='relative'>
+			<button
+				onClick={() => setIsOpen(true)}
+				className='btn btn-square btn-ghost text-base-content'
+				title='Menü megnyitása'
+			>
+				<svg
+					xmlns='http://www.w3.org/2000/svg'
+					fill='none'
+					viewBox='0 0 24 24'
+					className='inline-block w-6 h-6 stroke-current'
+				>
+					<path
+						strokeLinecap='round'
+						strokeLinejoin='round'
+						strokeWidth='2'
+						d='M4 6h16M4 12h16M4 18h16'
+					></path>
+				</svg>
+			</button>
+
+			{isOpen && (
+				<div
+					onClick={() => setIsOpen(false)}
+					className='fixed inset-0 bg-black/50 z-40 transition-opacity'
+				></div>
+			)}
+
+			<div
+				className={`fixed top-0 left-0 h-full w-80 bg-base-100 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between ${
+					isOpen ? 'translate-x-0' : '-translate-x-full'
+				}`}
+			>
+				<div>
+					<div className='flex justify-between items-center mb-8 border-b border-base-200 pb-4'>
+						<h3 className='text-xl font-extrabold text-base-content'>Menü</h3>
+						<button
+							onClick={() => setIsOpen(false)}
+							className='btn btn-sm btn-circle btn-ghost'
+						>
+							✕
+						</button>
+					</div>
+
+					<div className='flex flex-col gap-3'>
+						<button className='btn btn-ghost justify-start text-base'>🏠 Főoldal</button>
+						<button
+							onClick={() => {
+								setIsOpen(false);
+								navigate('/profile');
+							}}
+							className='btn btn-ghost justify-start text-base'
+						>
+							👤 Profil
+						</button>
+						<button className='btn btn-ghost justify-start text-base'>⭐ Toplista</button>
+						<button className='btn btn-ghost justify-start text-base'>
+							📊 Nézői statisztika
+						</button>
+					</div>
+				</div>
+
+				<div className='text-xs text-gray-400 text-center border-t border-base-200 pt-4'>
+					FilmApp &copy; 2026
+				</div>
+			</div>
+		</div>
+	);
+}
+
+// --- Főoldal (Startpage) komponens ---
 function Startpage() {
 	const [movies, setMovies] = useState([]);
 	const [movieRatings, setMovieRatings] = useState({});
+	const [userFavorites, setUserFavorites] = useState([]); // Kedvenc filmek ID-jai
 	const [error, setError] = useState(null);
 
 	const [selectedGenre, setSelectedGenre] = useState('Minden');
 	const [selectedYear, setSelectedYear] = useState('Minden');
 	const [searchTerm, setSearchTerm] = useState('');
+
+	const navigate = useNavigate();
+	const user = JSON.parse(localStorage.getItem('user'));
 
 	useEffect(() => {
 		const fetchMoviesAndRatings = async () => {
@@ -19,7 +100,17 @@ function Startpage() {
 				const moviesList = response.data;
 				setMovies(moviesList);
 
-				// 2. Minden filmhez lekérjük az értékeléseket a meglévő API-val
+				// 2. Ha be van jelentkezve a user, lekérjük a kedvenceit is
+				if (user) {
+					try {
+						const favRes = await api.get(`/api/favorites/${user.id}`);
+						setUserFavorites(favRes.data.map((fav) => fav.id));
+					} catch (err) {
+						console.error('Hiba a kedvencek lekérésekor:', err);
+					}
+				}
+
+				// 3. Minden filmhez lekérjük az értékeléseket
 				const ratingsPromises = moviesList.map(async (movie) => {
 					try {
 						const ratingRes = await api.get(`/api/ratings/${movie.id}`);
@@ -35,7 +126,6 @@ function Startpage() {
 
 				const ratingsResults = await Promise.all(ratingsPromises);
 
-				// Objektumba rendezzük ID alapján
 				const ratingsObj = {};
 				ratingsResults.forEach((r) => {
 					ratingsObj[r.movieId] = {
@@ -53,6 +143,34 @@ function Startpage() {
 
 		fetchMoviesAndRatings();
 	}, []);
+
+	// Kedvencek toggle funkció a kártyákhoz
+	const handleFavoriteToggle = async (movieId, e) => {
+		e.preventDefault(); // Megakadályozza, hogy a kártya Link-je lefusson
+		e.stopPropagation();
+
+		if (!user) {
+			navigate('/login');
+			return;
+		}
+
+		const isFav = userFavorites.includes(movieId);
+
+		try {
+			if (isFav) {
+				await api.delete(`/api/favorites/${user.id}/${movieId}`);
+				setUserFavorites(userFavorites.filter((id) => id !== movieId));
+			} else {
+				await api.post('/api/favorites', {
+					user_id: user.id,
+					movie_id: movieId,
+				});
+				setUserFavorites([...userFavorites, movieId]);
+			}
+		} catch (err) {
+			console.error('Hiba a kedvencek módosításakor:', err);
+		}
+	};
 
 	// Összes műfaj kigyűjtése
 	const uniqueGenres = ['Minden', ...new Set(movies.map((movie) => movie.genre).filter(Boolean))];
@@ -76,7 +194,11 @@ function Startpage() {
 
 	return (
 		<div className='w-full p-6'>
-			<h1 className='text-3xl font-bold mb-8 text-center'>Elérhető Filmek</h1>
+			<div className='flex items-center justify-between mb-8 max-w-7xl mx-auto'>
+				<SideMenu />
+				<h1 className='text-3xl font-bold flex-1 text-center'>Elérhető Filmek</h1>
+				<div className='w-10'></div>
+			</div>
 
 			<div className='flex flex-col md:flex-row flex-wrap justify-center md:justify-end gap-4 mb-8 px-4'>
 				<input
@@ -127,14 +249,15 @@ function Startpage() {
 			<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto'>
 				{filteredMovies.map((movie) => {
 					const stats = movieRatings[movie.id] || { averageRating: 0, totalVotes: 0 };
+					const isFavorite = userFavorites.includes(movie.id);
 
 					return (
 						<Link
 							to={`/movie/${movie.id}`}
 							key={movie.id}
-							className='card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 flex flex-col border border-base-200 overflow-hidden'
+							className='card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 flex flex-col border border-base-200 overflow-hidden relative'
 						>
-							<figure className='w-full aspect-[2/3] m-0 rounded-t-2xl'>
+							<figure className='w-full aspect-[2/3] m-0 rounded-t-2xl relative'>
 								<img
 									src={
 										movie.poster_url ||
@@ -143,11 +266,20 @@ function Startpage() {
 									alt={movie.title || 'Film poszter'}
 									className='w-full h-full object-cover'
 								/>
+
+								<button
+									onClick={(e) => handleFavoriteToggle(movie.id, e)}
+									className='absolute top-3 right-3 btn btn-circle btn-sm bg-base-100/80 hover:bg-base-100 border-none shadow-md text-lg'
+									title={
+										isFavorite ? 'Eltávolítás a kedvencekből' : 'Hozzáadás a kedvencekhez'
+									}
+								>
+									{isFavorite ? '❤️' : '🤍'}
+								</button>
 							</figure>
 
 							<div className='card-body p-5 flex flex-col justify-between flex-grow text-center'>
 								<div>
-									{/* Cím és az ÚJ jelzés egymás mellett */}
 									<h2 className='card-title text-base justify-center text-center mb-1 flex items-center flex-wrap gap-2'>
 										<span>{movie.title || 'Ismeretlen cím'}</span>
 										{movie.isNew === 1 && (
@@ -157,7 +289,6 @@ function Startpage() {
 										)}
 									</h2>
 
-									{/* Átlagos értékelés */}
 									<div className='flex justify-center items-center gap-1 text-sm font-semibold mb-2 text-warning'>
 										<span>
 											⭐{' '}

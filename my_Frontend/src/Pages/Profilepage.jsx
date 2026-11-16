@@ -40,9 +40,15 @@ function Profilepage() {
 		try {
 			const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
 			if (savedUser.id) {
+				// Watchlist lekérése
 				api.get(`/api/watchlist/${savedUser.id}`)
 					.then((response) => setWatchlist(response.data))
 					.catch((err) => console.error('Hiba a watchlist lekérésekor:', err));
+
+				// Kedvencek lekérése
+				api.get(`/api/favorites/${savedUser.id}`)
+					.then((response) => setFavorites(response.data))
+					.catch((err) => console.error('Hiba a kedvencek lekérésekor:', err));
 			}
 		} catch (err) {
 			console.error(err);
@@ -83,7 +89,8 @@ function Profilepage() {
 							{favorites.map((movie) => (
 								<div
 									key={movie.id}
-									className='bg-gray-700 p-4 rounded border border-gray-600 flex items-center space-x-3'
+									onClick={() => navigate(`/movie/${movie.id}`)}
+									className='bg-gray-700 p-4 rounded border border-gray-600 flex items-center space-x-3 cursor-pointer hover:bg-gray-600 transition'
 								>
 									{movie.poster_url && (
 										<img
