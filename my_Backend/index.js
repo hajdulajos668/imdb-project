@@ -322,6 +322,53 @@ app.delete('/api/favorites/:userId/:movieId', async (req, res) => {
     }
 });
 
+// --- SZEMÉLYES STATISZTIKA RENDSZER ---
+
+app.get('/api/users/:userId/stats', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // 1. Összes megtekintett film (Watchlist alapján) hossza percben és darabszáma
+        const [watchlistRows] = await db.query(
+            `SELECT COUNT(m.id) as watched_count, COALESCE(SUM(m.duration), 0) as total_minutes
+             FROM watchlist w 
+             JOIN movies m ON w.movie_id = m.id 
+             WHERE w.user_id = ?`,
+            [userId]
+        );
+
+		// 2. Értékelt filmek darabszáma
+        const [ratedRows] = await db.query(
+            `SELECT COUNT(DISTINCT movie_id) as rated_count 
+             FROM ratings 
+             WHERE user_id = ?`,
+            [userId]
+        );
+
+		// 3. ÚJ: Kedvenc műfajok lekérdezése a watchlist alapján
+        const [genreRows] = await db.query(
+            `SELECT m.genre, COUNT(*) as count
+             FROM watchlist w
+             JOIN movies m ON w.movie_id = m.id
+             WHERE w.user_id = ? AND m.genre IS NOT NULL AND m.genre != ''
+             GROUP BY m.genre
+             ORDER BY count DESC`,
+            [userId]
+        );
+
+		res.json({
+            total_minutes: Number(watchlistRows[0].total_minutes),
+            watched_movies_count: Number(watchlistRows[0].watched_count),
+            rated_movies_count: Number(ratedRows[0].rated_count),
+			genres: genreRows // Műfajok listája [{ genre: 'Sci-Fi', count: 3 }, ...]
+        });
+    } catch (error) {
+        console.error('Hiba a statisztika lekérésekor:', error);
+        res.status(500).json({ error: 'Adatbázis hiba' });
+    }
+});
+
+
 // Server start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

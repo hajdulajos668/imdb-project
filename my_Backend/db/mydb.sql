@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Gép: 127.0.0.1
--- Létrehozás ideje: 2026. Nov 16. 11:48
--- Kiszolgáló verziója: 10.11.16-MariaDB
--- PHP verzió: 8.3.36
+-- Létrehozás ideje: 2026. Nov 17. 13:10
+-- Kiszolgáló verziója: 10.4.32-MariaDB
+-- PHP verzió: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -55,36 +55,37 @@ CREATE TABLE `movies` (
   `release_date` date DEFAULT NULL,
   `genre` varchar(100) DEFAULT NULL,
   `poster_url` varchar(255) DEFAULT NULL,
-  `isNew` tinyint(1) DEFAULT 0
+  `isNew` tinyint(1) DEFAULT 0,
+  `duration` int(11) DEFAULT 120
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- A tábla adatainak kiíratása `movies`
 --
 
-INSERT INTO `movies` (`id`, `title`, `description`, `release_date`, `genre`, `poster_url`, `isNew`) VALUES
-(1, 'Mátrix', 'Egy hacker rájön, hogy a valóság, amit ismer, csak egy számítógépes szimuláció.', '1999-03-31', 'Sci-Fi', 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', 0),
-(2, 'Dűne: Második rész', 'Paul Atreides egyesíti erőit a fremenekkel, hogy bosszút álljon a családja elpusztítóin.', '2024-02-28', 'Sci-Fi', 'https://www.movieposters.com/cdn/shop/files/dune-part-two_tidfhvjl.jpg?v=1762975408&width=500', 1),
-(3, 'Eredet', 'Tolvajok egy csoportja behatol az emberek álmaiba, hogy titkokat lopjanak el.', '2010-07-16', 'Sci-Fi', 'https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg', 0),
-(4, 'A Gyűrűk Ura: A Gyűrű Szövetsége', 'Egy ifjú hobbit feladata, hogy megsemmisítsen egy nagy hatalmú gyűrűt, mielőtt az a sötét úr kezébe kerül.', '2001-12-19', 'Fantasy', 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg', 0),
-(5, 'A sötét lovag', 'Batmannek egy új, kaotikus gonosztevővel, Jokerrel kell szembenéznie Gotham városában.', '2008-07-18', 'Action', 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg', 0),
-(6, 'Csillagok között', 'Egy űrhajóscsapat egy féreglyukon keresztül utazik, hogy új otthont találjon a pusztuló Föld helyett.', '2014-11-07', 'Sci-Fi', 'https://www.movieposters.com/cdn/shop/files/interstellar-139399.jpg?v=1762974876&width=1680', 0),
-(7, 'Gladiátor II', 'Évekkel Maximus halála után Luciusnak a Colosseumban kell küzdenie a birodalom túléléséért.', '2024-11-22', 'Action', 'https://www.movieposters.com/cdn/shop/files/scan_2269aed4-cfa4-4787-93af-6cc03143c55d.jpg?v=1762977632&width=1680', 1),
-(8, 'Deadpool & Rozsomák', 'A nagyszájú zsoldos és a morcos mutáns kénytelen összefogni a multiverzum megmentéséért.', '2024-07-26', 'Action', 'https://www.movieposters.com/cdn/shop/files/deadpool-wolverine_866a70e7-fb48-4f35-a44b-41594691ac76.jpg?v=1762977021&width=1680', 1),
-(9, 'Oppenheimer', 'J. Robert Oppenheimer fizikus története és az első atombomba kifejlesztése.', '2023-07-21', 'Drama', 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg', 0),
-(10, 'Vissza a jövőbe', 'Egy tinédzser véletlenül visszautazik 1955-be egy plutóniummal hajtott DeLorean időgéppel.', '1985-07-03', 'Sci-Fi', 'https://www.movieposters.com/cdn/shop/files/backtofuture.mpw.jpg?v=1762467212&width=1680', 0),
-(11, 'Alien: Romulus', 'Fiatal űrkolonizálók egy elhagyatott űrállomáson a világegyetem legfélelmetesebb életformájával találkoznak.', '2024-08-16', 'Horror', 'https://www.movieposters.com/cdn/shop/files/alien_romulus.jpg?v=1762976144&width=1680', 1),
-(12, 'Agymanók 2', 'Riley eléri a tinédzserkort, és az elméjében új, váratlan érzelmek veszik át az irányítást.', '2024-06-14', 'Animation', 'https://image.tmdb.org/t/p/w500/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg', 1),
-(13, 'Jurassic Park', 'Egy tudósokból álló csoport egy klónozott dinoszauruszokkal teli szigeten reked.', '1993-06-11', 'Adventure', 'https://www.movieposters.com/cdn/shop/files/jurassicpark.mpw.jpg?v=1762464743&width=1680', 0),
-(14, 'Ponyvaregény', 'Két bérgyilkos, egy bokszoló és egy gengszter feleségének sorsa fonódik össze Los Angelesben.', '1994-10-14', 'Crime', 'https://www.movieposters.com/cdn/shop/files/PulpFiction.Ver1.jpg?v=1762475243&width=1680', 0),
-(15, 'Avatar: A víz útja', 'Jake Sully és családja új veszélyekkel és ellenségekkel néz szembe Pandora óceánjain.', '2022-12-16', 'Sci-Fi', 'https://www.movieposters.com/cdn/shop/products/avatar-the-way-of-water_sncuhzap.jpg?v=1762971780&width=1680', 0),
-(16, 'Barbie', 'Barbie egy nap rájön, hogy a tökéletes élete nem is annyira tökéletes, ezért a való világba utazik.', '2023-07-21', 'Comedy', 'https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg', 0),
-(17, 'A Keresztapa', 'Egy New York-i maffiacsalád öregedő vezetője átadja a hatalmat vonakodó fiának.', '1972-03-24', 'Crime', 'https://www.movieposters.com/cdn/shop/products/b5282f72126e4919911509e034a61f66_6ce2486d-e0da-4b7a-9148-722cdde610b8.jpg?v=1762507445&width=1680', 0),
-(18, 'Furiosa: Történet a Mad Maxből', 'A fiatal Furiosa elrablása után megpróbál hazajutni a posztapokaliptikus pusztaságon át.', '2024-05-24', 'Action', 'https://image.tmdb.org/t/p/w500/iADOJ8Zymht2JPMoy3R7xceZprc.jpg', 1),
-(19, 'Harcosok klubja', '', '1999-10-15', 'Drama', 'https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg', 0),
-(20, 'Terminátor 2. - Az ítélet napja', 'Egy jövőből küldött kiborg feladata, hogy megvédjen egy fiút a még fejlettebb, folyékony fémből készült géptől.', '1991-07-03', 'Action', 'https://image.tmdb.org/t/p/w500/5M0j0B18abtBI5gi2RhfjjurTqb.jpg', 0),
-(21, 'Pókember: A Pókverzumon át', 'Miles Morales a multiverzumban találkozik más Pókemberekkel, de egy nehéz döntés miatt szembe is kerül velük.', '2023-06-02', 'Animation', 'https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg', 0),
-(22, 'Mentőexpedíció', 'Egy űrhajóst halottnak hisznek, és a Marson hagyják. Egyedül kell túlélnie, míg a Földről mentőcsapatot küldenek.', '2015-10-02', 'Sci-Fi', 'https://image.tmdb.org/t/p/w500/5BHuvQ6p9kfc091Z8RiFNhCwL4b.jpg', 0);
+INSERT INTO `movies` (`id`, `title`, `description`, `release_date`, `genre`, `poster_url`, `isNew`, `duration`) VALUES
+(1, 'Mátrix', 'Egy hacker rájön, hogy a valóság, amit ismer, csak egy számítógépes szimuláció.', '1999-03-31', 'Sci-Fi', 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', 0, 120),
+(2, 'Dűne: Második rész', 'Paul Atreides egyesíti erőit a fremenekkel, hogy bosszút álljon a családja elpusztítóin.', '2024-02-28', 'Sci-Fi', 'https://www.movieposters.com/cdn/shop/files/dune-part-two_tidfhvjl.jpg?v=1762975408&width=500', 1, 120),
+(3, 'Eredet', 'Tolvajok egy csoportja behatol az emberek álmaiba, hogy titkokat lopjanak el.', '2010-07-16', 'Sci-Fi', 'https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg', 0, 120),
+(4, 'A Gyűrűk Ura: A Gyűrű Szövetsége', 'Egy ifjú hobbit feladata, hogy megsemmisítsen egy nagy hatalmú gyűrűt, mielőtt az a sötét úr kezébe kerül.', '2001-12-19', 'Fantasy', 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg', 0, 120),
+(5, 'A sötét lovag', 'Batmannek egy új, kaotikus gonosztevővel, Jokerrel kell szembenéznie Gotham városában.', '2008-07-18', 'Action', 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg', 0, 120),
+(6, 'Csillagok között', 'Egy űrhajóscsapat egy féreglyukon keresztül utazik, hogy új otthont találjon a pusztuló Föld helyett.', '2014-11-07', 'Sci-Fi', 'https://www.movieposters.com/cdn/shop/files/interstellar-139399.jpg?v=1762974876&width=1680', 0, 120),
+(7, 'Gladiátor II', 'Évekkel Maximus halála után Luciusnak a Colosseumban kell küzdenie a birodalom túléléséért.', '2024-11-22', 'Action', 'https://www.movieposters.com/cdn/shop/files/scan_2269aed4-cfa4-4787-93af-6cc03143c55d.jpg?v=1762977632&width=1680', 1, 120),
+(8, 'Deadpool & Rozsomák', 'A nagyszájú zsoldos és a morcos mutáns kénytelen összefogni a multiverzum megmentéséért.', '2024-07-26', 'Action', 'https://www.movieposters.com/cdn/shop/files/deadpool-wolverine_866a70e7-fb48-4f35-a44b-41594691ac76.jpg?v=1762977021&width=1680', 1, 120),
+(9, 'Oppenheimer', 'J. Robert Oppenheimer fizikus története és az első atombomba kifejlesztése.', '2023-07-21', 'Drama', 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg', 0, 120),
+(10, 'Vissza a jövőbe', 'Egy tinédzser véletlenül visszautazik 1955-be egy plutóniummal hajtott DeLorean időgéppel.', '1985-07-03', 'Sci-Fi', 'https://www.movieposters.com/cdn/shop/files/backtofuture.mpw.jpg?v=1762467212&width=1680', 0, 120),
+(11, 'Alien: Romulus', 'Fiatal űrkolonizálók egy elhagyatott űrállomáson a világegyetem legfélelmetesebb életformájával találkoznak.', '2024-08-16', 'Horror', 'https://www.movieposters.com/cdn/shop/files/alien_romulus.jpg?v=1762976144&width=1680', 1, 120),
+(12, 'Agymanók 2', 'Riley eléri a tinédzserkort, és az elméjében új, váratlan érzelmek veszik át az irányítást.', '2024-06-14', 'Animation', 'https://image.tmdb.org/t/p/w500/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg', 1, 120),
+(13, 'Jurassic Park', 'Egy tudósokból álló csoport egy klónozott dinoszauruszokkal teli szigeten reked.', '1993-06-11', 'Adventure', 'https://www.movieposters.com/cdn/shop/files/jurassicpark.mpw.jpg?v=1762464743&width=1680', 0, 120),
+(14, 'Ponyvaregény', 'Két bérgyilkos, egy bokszoló és egy gengszter feleségének sorsa fonódik össze Los Angelesben.', '1994-10-14', 'Crime', 'https://www.movieposters.com/cdn/shop/files/PulpFiction.Ver1.jpg?v=1762475243&width=1680', 0, 120),
+(15, 'Avatar: A víz útja', 'Jake Sully és családja új veszélyekkel és ellenségekkel néz szembe Pandora óceánjain.', '2022-12-16', 'Sci-Fi', 'https://www.movieposters.com/cdn/shop/products/avatar-the-way-of-water_sncuhzap.jpg?v=1762971780&width=1680', 0, 120),
+(16, 'Barbie', 'Barbie egy nap rájön, hogy a tökéletes élete nem is annyira tökéletes, ezért a való világba utazik.', '2023-07-21', 'Comedy', 'https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg', 0, 120),
+(17, 'A Keresztapa', 'Egy New York-i maffiacsalád öregedő vezetője átadja a hatalmat vonakodó fiának.', '1972-03-24', 'Crime', 'https://www.movieposters.com/cdn/shop/products/b5282f72126e4919911509e034a61f66_6ce2486d-e0da-4b7a-9148-722cdde610b8.jpg?v=1762507445&width=1680', 0, 120),
+(18, 'Furiosa: Történet a Mad Maxből', 'A fiatal Furiosa elrablása után megpróbál hazajutni a posztapokaliptikus pusztaságon át.', '2024-05-24', 'Action', 'https://image.tmdb.org/t/p/w500/iADOJ8Zymht2JPMoy3R7xceZprc.jpg', 1, 120),
+(19, 'Harcosok klubja', '', '1999-10-15', 'Drama', 'https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg', 0, 120),
+(20, 'Terminátor 2. - Az ítélet napja', 'Egy jövőből küldött kiborg feladata, hogy megvédjen egy fiút a még fejlettebb, folyékony fémből készült géptől.', '1991-07-03', 'Action', 'https://image.tmdb.org/t/p/w500/5M0j0B18abtBI5gi2RhfjjurTqb.jpg', 0, 120),
+(21, 'Pókember: A Pókverzumon át', 'Miles Morales a multiverzumban találkozik más Pókemberekkel, de egy nehéz döntés miatt szembe is kerül velük.', '2023-06-02', 'Animation', 'https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg', 0, 120),
+(22, 'Mentőexpedíció', 'Egy űrhajóst halottnak hisznek, és a Marson hagyják. Egyedül kell túlélnie, míg a Földről mentőcsapatot küldenek.', '2015-10-02', 'Sci-Fi', 'https://image.tmdb.org/t/p/w500/5BHuvQ6p9kfc091Z8RiFNhCwL4b.jpg', 0, 120);
 
 -- --------------------------------------------------------
 
@@ -136,7 +137,8 @@ INSERT INTO `users` (`id`, `name`, `email`, `password`) VALUES
 (5, 'eeeeeee', 'valami123@gmail.com', '$2b$10$0jCzMubgtxC/ndc/v3hRAe4Fk8FqjwpW7v4dUgwaRyXR3aJPztKp2'),
 (6, 'eeeeeeeeeee', 'valami1234@gmail.com', '$2b$10$8Cnv.ctOQVzl/zQ3gaedVOShucBEBwbkhgZ8yRT/A75xA9dkInnPu'),
 (7, 'user', 'user@user.com', '$2b$10$t9Q8DXylmUTzcX/GWwxpLuJqYxmSinoXjM2d8xFC62zKIabrdF5I.'),
-(8, 'teszt13', 'teszt@teszt.com', '$2b$10$JJv3/KZbabFxwnpSqcE2vuogKoZteUFt.S3RYcb2V9yFlFT.ZWAdm');
+(8, 'teszt13', 'teszt@teszt.com', '$2b$10$JJv3/KZbabFxwnpSqcE2vuogKoZteUFt.S3RYcb2V9yFlFT.ZWAdm'),
+(9, 'Teszt123', 'teszt@gmail.com', '$2b$10$9wop4Dqu/AMabu9cR./zfO2wf2vNiWYjSkTt9VL.Xtr4hC8G3lM.a');
 
 -- --------------------------------------------------------
 
@@ -157,7 +159,13 @@ CREATE TABLE `watchlist` (
 
 INSERT INTO `watchlist` (`id`, `user_id`, `movie_id`, `added_at`) VALUES
 (14, 6, 1, '2026-11-12 14:25:45'),
-(18, 7, 5, '2026-11-16 10:17:23');
+(18, 7, 5, '2026-11-16 10:17:23'),
+(24, 9, 2, '2026-11-17 12:02:43'),
+(25, 9, 3, '2026-11-17 12:02:46'),
+(26, 9, 8, '2026-11-17 12:02:49'),
+(27, 9, 11, '2026-11-17 12:04:04'),
+(28, 9, 1, '2026-11-17 12:04:10'),
+(29, 9, 21, '2026-11-17 12:04:37');
 
 --
 -- Indexek a kiírt táblákhoz
@@ -212,19 +220,19 @@ ALTER TABLE `movies`
 -- AUTO_INCREMENT a táblához `ratings`
 --
 ALTER TABLE `ratings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT a táblához `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT a táblához `watchlist`
 --
 ALTER TABLE `watchlist`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- Megkötések a kiírt táblákhoz
