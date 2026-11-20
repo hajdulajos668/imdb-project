@@ -364,26 +364,64 @@ app.get('/api/users/:userId/stats', async (req, res) => {
 // --- ADMIN ---
 
 const verifyAdmin = async (req, res, next) => {
-    const userId = req.headers['user-id'] || req.body.user_id;
+	const userId = req.headers['user-id'];
 
-    if (!userId) {
-        return res.status(401).json({ error: 'Hiányzó felhasználói azonosító!' });
-    }
+	if (!userId) {
+		return res.status(401).json({ error: 'Hiányzó felhasználói azonosító!' });
+	}
 
-    try {
-        const [users] = await db.query('SELECT is_admin FROM users WHERE id = ?', [userId]);
-        
-        if (users.length === 0 || users[0].is_admin !== 1) {
-            return res.status(403).json({ error: 'Nincs adminisztrátori jogosultságod!' });
-        }
-        
-        next();
-    } catch (err) {
-        res.status(500).json({ error: 'Szerverhiba a jogosultság ellenőrzésekor.' });
-    }
+	try {
+		const [users] = await db.query('SELECT is_admin FROM users WHERE id = ?', [userId]);
+		if (users.length === 0 || users[0].is_admin !== 1) {
+			return res.status(403).json({ error: 'Nincs adminisztrátori jogosultságod!' });
+		}
+		next();
+	} catch (err) {
+		console.error('Admin ellenőrzési hiba:', err);
+		res.status(500).json({ error: 'Szerverhiba a jogosultság ellenőrzésekor.' });
+	}
 };
 
+// Új film hozzáadása (Csak adminoknak)
 app.post('/api/movies', verifyAdmin, async (req, res) => {
+	const { title, genre, description, release_date, poster_url, isNew } = req.body;
+
+	if (!title || !genre) {
+		return res.status(400).json({ error: 'A cím és a műfaj megadása kötelező!' });
+	}
+
+	try {
+		const [result] = await db.query(
+			'INSERT INTO movies (title, genre, description, release_date, poster_url, isNew) VALUES (?, ?, ?, ?, ?, ?)',
+			[
+				title,
+				genre,
+				description || null,
+				release_date,
+				poster_url || null,
+				isNew ? 1 : 0,
+			],
+		);
+		res.status(201).json({ message: 'Film sikeresen hozzáadva!', id: result.insertId });
+	} catch (err) {
+		console.error('Hiba a film mentésekor:', err);
+		res.status(500).json({ error: 'Adatbázis hiba a film létrehozásakor.' });
+	}
+});
+
+// Film törlése (Csak adminoknak)
+app.delete('/api/movies/:id', verifyAdmin, async (req, res) => {
+	const movieId = req.params.id;
+
+	try {
+		await db.query('DELETE FROM movies WHERE id = ?', [movieId]);
+		res.status(200).json({ message: 'Film sikeresen törölve!' });
+	} catch (err) {
+		console.error('Hiba a film törlésekor:', err);
+		res.status(500).json({
+			error: 'Nem sikerült törölni a filmet.',
+		});
+	}
 });
 
 // Server start
