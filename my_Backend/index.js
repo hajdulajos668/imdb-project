@@ -393,14 +393,7 @@ app.post('/api/movies', verifyAdmin, async (req, res) => {
 	try {
 		const [result] = await db.query(
 			'INSERT INTO movies (title, genre, description, release_date, poster_url, isNew) VALUES (?, ?, ?, ?, ?, ?)',
-			[
-				title,
-				genre,
-				description || null,
-				release_date,
-				poster_url || null,
-				isNew ? 1 : 0,
-			],
+			[title, genre, description || null, release_date, poster_url || null, isNew ? 1 : 0],
 		);
 		res.status(201).json({ message: 'Film sikeresen hozzáadva!', id: result.insertId });
 	} catch (err) {
@@ -421,6 +414,41 @@ app.delete('/api/movies/:id', verifyAdmin, async (req, res) => {
 		res.status(500).json({
 			error: 'Nem sikerült törölni a filmet.',
 		});
+	}
+});
+
+// Összes vélemény lekérése (Csak adminoknak)
+app.get('/api/admin/ratings', verifyAdmin, async (req, res) => {
+	try {
+		const [ratings] = await db.query(`
+            SELECT 
+                r.id, 
+                r.rating, 
+                r.review_text, 
+                r.created_at, 
+                u.name AS user_name, 
+                m.title AS movie_title
+            FROM ratings r
+            JOIN users u ON r.user_id = u.id
+            JOIN movies m ON r.movie_id = m.id
+            ORDER BY r.created_at DESC
+        `);
+		res.status(200).json(ratings);
+	} catch (err) {
+		console.error('Hiba a vélemények lekérésekor:', err);
+		res.status(500).json({ error: 'Adatbázis hiba a vélemények betöltésekor.' });
+	}
+});
+
+// Konkrét vélemény törlése ID alapján (Csak adminoknak)
+app.delete('/api/admin/ratings/:id', verifyAdmin, async (req, res) => {
+	const ratingId = req.params.id;
+	try {
+		await db.query('DELETE FROM ratings WHERE id = ?', [ratingId]);
+		res.status(200).json({ message: 'Vélemény sikeresen törölve!' });
+	} catch (err) {
+		console.error('Hiba a vélemény törlésekor:', err);
+		res.status(500).json({ error: 'Nem sikerült törölni a véleményt.' });
 	}
 });
 
