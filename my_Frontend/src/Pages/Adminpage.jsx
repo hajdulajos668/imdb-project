@@ -165,6 +165,7 @@ function AdminPage() {
 			});
 			showMessage('success', 'Felhasználó sikeresen törölve.');
 			setUsersList(usersList.filter((u) => u.id !== targetUserId));
+			fetchReviews();
 		} catch (err) {
 			console.error('Hiba a törléskor:', err);
 			showMessage('error', err.response?.data?.error || 'Nem sikerült törölni a felhasználót.');
@@ -401,13 +402,12 @@ function AdminPage() {
 							</p>
 						) : (
 							<div className='overflow-x-auto'>
-								<table className='table table-zebra w-full'>
+								<table className='text-left table table-zebra w-full'>
 									<thead>
 										<tr>
 											<th>ID</th>
 											<th>Név</th>
 											<th>Email cím</th>
-											<th>Regisztráció</th>
 											<th>Szerepkör</th>
 											<th className='text-right'>Művelet</th>
 										</tr>
@@ -428,11 +428,6 @@ function AdminPage() {
 														)}
 													</td>
 													<td>{u.email}</td>
-													<td className='text-xs text-gray-500'>
-														{u.created_at
-															? new Date(u.created_at).toLocaleDateString('hu-HU')
-															: '-'}
-													</td>
 													<td>
 														{u.is_admin === 1 ? (
 															<span className='badge badge-primary badge-sm font-semibold'>
