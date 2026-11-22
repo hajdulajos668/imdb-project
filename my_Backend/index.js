@@ -489,6 +489,119 @@ app.delete('/api/admin/users/:id', verifyAdmin, async (req, res) => {
 	}
 });
 
+// --- FILMAJÁNLÓ RENDSZER ---
+app.get('/api/recommendations/:userId', async (req, res) => {
+	try {
+		const userId = Number(req.params.userId);
+		if (!userId) {
+			return res.status(400).json({ error: 'Érvénytelen userId!' });
+		}
+
+		// 1. Felhasználó által már értékelt filmek
+		const [userRatings] = await db.query(
+			`SELECT movie_id, rating
+			 FROM ratings
+			 WHERE user_id = ? AND is_deleted = 0`,
+			[userId],
+		);
+
+		// 2. Felhasználó Watchlist-jén lévő filmek
+		const [userWatchlist] = await db.query(
+			`SELECT movie_id
+			 FROM watchlist
+			 WHERE user_id = ?`,
+			[userId],
+		);
+
+		const ratedIds = new Set(userRatings.map((r) => Number(r.movie_id)));
+		const watchlistIds = new Set(userWatchlist.map((w) => Number(w.movie_id)));
+		const excludedIds = new Set([...ratedIds, ...watchlistIds]);
+
+		// 3. Összes film + globális értékelési átlag és szavazatszám
+		const [moviesWithStats] = await db.query(
+			`SELECT
+				m.*,
+				COALESCE(AVG(CASE WHEN r.is_deleted = 0 THEN r.rating END), 0) AS avg_rating,
+				COUNT(CASE WHEN r.is_deleted = 0 THEN r.rating END) AS vote_count
+			 FROM movies m
+			 LEFT JOIN ratings r ON m.id = r.movie_id
+			 GROUP BY m.id`,
+		);
+
+		// Kizárjuk a már értékelt és a Watchlist-en szereplő filmeket
+		const candidateMovies = moviesWithStats.filter((m) => !excludedIds.has(Number(m.id)));
+
+		const sortByGlobalTop = (a, b) => {
+			const ratingDiff = Number(b.avg_rating) - Number(a.avg_rating);
+			if (ratingDiff !== 0) return ratingDiff;
+			const votesDiff = Number(b.vote_count) - Number(a.vote_count);
+			if (votesDiff !== 0) return votesDiff;
+			return Number(b.isNew || 0) - Number(a.isNew || 0);
+		};
+
+		// Ha nincs értékelése a felhasználónak -> globális Top lista fallback (max 15)
+		if (userRatings.length === 0) {
+			const fallbackTop = [...candidateMovies].sort(sortByGlobalTop).slice(0, 15);
+			return res.json({
+				mode: 'top_fallback',
+				recommendations: fallbackTop,
+			});
+		}
+
+		// Műfaj-preferencia pontszámok a felhasználó értékelései alapján
+		const movieMap = new Map(moviesWithStats.map((m) => [Number(m.id), m]));
+		const genreWeights = {};
+
+		userRatings.forEach((r) => {
+			const movie = movieMap.get(Number(r.movie_id));
+			if (movie && movie.genre) {
+				// 3 csillag semlegesebb (0), 4-5 pozitív (+1 / +2), 1-2 negatív (-1 / -0.5)
+				const weight = Number(r.rating) - 3;
+				genreWeights[movie.genre] = (genreWeights[movie.genre] || 0) + weight;
+			}
+		});
+
+		// Jelöltek pontozása műfajegyezéssel + globális minőséggel
+		const scoredCandidates = candidateMovies.map((movie) => {
+			const genreScore =
+				movie.genre && genreWeights[movie.genre] ? genreWeights[movie.genre] * 2 : 0;
+			const qualityScore =
+				Number(movie.avg_rating) * 0.6 + Math.min(Number(movie.vote_count), 10) * 0.1;
+			const totalScore = genreScore + qualityScore;
+			return { ...movie, recommendation_score: totalScore };
+		});
+
+		scoredCandidates.sort((a, b) => {
+			const scoreDiff = b.recommendation_score - a.recommendation_score;
+			if (scoreDiff !== 0) return scoreDiff;
+			return sortByGlobalTop(a, b);
+		});
+
+		// Minimum 5 (ha van ennyi jelölt), maximum 15 film
+		const minTarget = Math.min(5, scoredCandidates.length);
+		let finalList = scoredCandidates.slice(0, 15);
+
+		if (finalList.length < minTarget) {
+			const extraTop = [...candidateMovies].sort(sortByGlobalTop).slice(0, minTarget);
+			const existingIds = new Set(finalList.map((item) => item.id));
+			for (const item of extraTop) {
+				if (!existingIds.has(item.id) && finalList.length < 15) {
+					finalList.push(item);
+					existingIds.add(item.id);
+				}
+			}
+		}
+
+		return res.json({
+			mode: 'personalized',
+			recommendations: finalList,
+		});
+	} catch (error) {
+		console.error('Hiba az ajánló lekérésekor:', error);
+		res.status(500).json({ error: 'Adatbázis hiba az ajánló készítésekor.' });
+	}
+});
+
 // Server start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
