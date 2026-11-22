@@ -82,8 +82,12 @@ function SideMenu() {
 function Startpage() {
 	const [movies, setMovies] = useState([]);
 	const [movieRatings, setMovieRatings] = useState({});
-	const [userFavorites, setUserFavorites] = useState([]); // Kedvenc filmek ID-jai
+	const [userFavorites, setUserFavorites] = useState([]);
 	const [error, setError] = useState(null);
+
+	// --- ÚJ: Ajánló szekció állapota ---
+	const [recommendedMovies, setRecommendedMovies] = useState([]);
+	const [recommendationMode, setRecommendationMode] = useState('personalized');
 
 	const [selectedGenre, setSelectedGenre] = useState('Minden');
 	const [selectedYear, setSelectedYear] = useState('Minden');
@@ -100,13 +104,22 @@ function Startpage() {
 				const moviesList = response.data;
 				setMovies(moviesList);
 
-				// 2. Ha be van jelentkezve a user, lekérjük a kedvenceit is
+				// 2. Ha be van jelentkezve a user, lekérjük a kedvenceit és az ajánlásait
 				if (user) {
 					try {
 						const favRes = await api.get(`/api/favorites/${user.id}`);
 						setUserFavorites(favRes.data.map((fav) => fav.id));
 					} catch (err) {
 						console.error('Hiba a kedvencek lekérésekor:', err);
+					}
+
+					// --- ÚJ: Személyre szabott ajánlások / Top lista fallback lekérése ---
+					try {
+						const recRes = await api.get(`/api/recommendations/${user.id}`);
+						setRecommendedMovies(recRes.data.recommendations || []);
+						setRecommendationMode(recRes.data.mode || 'personalized');
+					} catch (err) {
+						console.error('Hiba az ajánlások lekérésekor:', err);
 					}
 				}
 
@@ -146,7 +159,7 @@ function Startpage() {
 
 	// Kedvencek toggle funkció a kártyákhoz
 	const handleFavoriteToggle = async (movieId, e) => {
-		e.preventDefault(); // Megakadályozza, hogy a kártya Link-je lefusson
+		e.preventDefault();
 		e.stopPropagation();
 
 		if (!user) {
@@ -192,6 +205,65 @@ function Startpage() {
 		return matchGenre && matchYear && matchTitle;
 	});
 
+	// --- ÚJ: Segédfüggvény egy filmkártya kirajzolásához (hogy ne duplikáljuk a kártyakódot) ---
+	const renderMovieCard = (movie) => {
+		const stats = movieRatings[movie.id] || { averageRating: 0, totalVotes: 0 };
+		const isFavorite = userFavorites.includes(movie.id);
+
+		return (
+			<Link
+				to={`/movie/${movie.id}`}
+				key={movie.id}
+				className='card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 flex flex-col border border-base-200 overflow-hidden relative'
+			>
+				<figure className='w-full aspect-[2/3] m-0 rounded-t-2xl relative'>
+					<img
+						src={
+							movie.poster_url ||
+							'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.vecteezy.com%2Fsystem%2Fresources%2Fpreviews%2F048%2F910%2F778%2Fnon_2x%2Fdefault-image-missing-placeholder-free-vector.jpg&f=1&nofb=1&ipt=93339020a140657a560ee8c01ec1a6a81156aded326d1ae7d41e8912d97d5896&ipo=images'
+						}
+						alt={movie.title || 'Film poszter'}
+						className='w-full h-full object-cover'
+					/>
+
+					<button
+						onClick={(e) => handleFavoriteToggle(movie.id, e)}
+						className='absolute top-3 right-3 btn btn-circle btn-sm bg-base-100/80 hover:bg-base-100 border-none shadow-md text-lg'
+						title={isFavorite ? 'Eltávolítás a kedvencekből' : 'Hozzáadás a kedvencekhez'}
+					>
+						{isFavorite ? '❤️' : '🤍'}
+					</button>
+				</figure>
+
+				<div className='card-body p-5 flex flex-col justify-between flex-grow text-center'>
+					<div>
+						<h2 className='card-title text-base justify-center text-center mb-1 flex items-center flex-wrap gap-2'>
+							<span>{movie.title || 'Ismeretlen cím'}</span>
+							{movie.isNew === 1 && (
+								<span className='badge badge-secondary badge-sm font-bold'>ÚJ</span>
+							)}
+						</h2>
+
+						<div className='flex justify-center items-center gap-1 text-sm font-semibold mb-2 text-warning'>
+							<span>
+								⭐ {stats.averageRating > 0 ? stats.averageRating : 'Nincs értékelés'}
+							</span>
+							{stats.totalVotes > 0 && (
+								<span className='text-xs text-gray-500 font-normal'>
+									({stats.totalVotes})
+								</span>
+							)}
+						</div>
+
+						<p className='text-xs text-gray-500 line-clamp-2'>
+							{movie.description || 'Nincs elérhető leírás a filmhez.'}
+						</p>
+					</div>
+				</div>
+			</Link>
+		);
+	};
+
 	return (
 		<div className='w-full p-6'>
 			<div className='flex items-center justify-between mb-8 max-w-7xl mx-auto'>
@@ -199,6 +271,31 @@ function Startpage() {
 				<h1 className='text-3xl font-bold flex-1 text-center'>Elérhető Filmek</h1>
 				<div className='w-10'></div>
 			</div>
+
+			{/* --- ÚJ: "Neked ajánljuk" szekció --- */}
+			{user && recommendedMovies.length > 0 && (
+				<section className='max-w-7xl mx-auto mb-12'>
+					<div className='flex flex-wrap items-center justify-between gap-2 mb-4 px-1'>
+						<div className='flex items-center gap-3'>
+							<h2 className='text-2xl font-bold'>Neked ajánljuk ✨</h2>
+							<span className='badge badge-outline badge-sm'>
+								{recommendationMode === 'top_fallback'
+									? 'Globális Top lista'
+									: 'Személyre szabott'}
+							</span>
+						</div>
+						<span className='text-xs text-gray-500'>
+							{recommendedMovies.length} ajánlott film
+						</span>
+					</div>
+
+					<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+						{recommendedMovies.map((movie) => renderMovieCard(movie))}
+					</div>
+
+					<div className='divider my-10'>Összes film</div>
+				</section>
+			)}
 
 			<div className='flex flex-col md:flex-row flex-wrap justify-center md:justify-end gap-4 mb-8 px-4'>
 				<input
@@ -247,68 +344,7 @@ function Startpage() {
 			)}
 
 			<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto'>
-				{filteredMovies.map((movie) => {
-					const stats = movieRatings[movie.id] || { averageRating: 0, totalVotes: 0 };
-					const isFavorite = userFavorites.includes(movie.id);
-
-					return (
-						<Link
-							to={`/movie/${movie.id}`}
-							key={movie.id}
-							className='card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 flex flex-col border border-base-200 overflow-hidden relative'
-						>
-							<figure className='w-full aspect-[2/3] m-0 rounded-t-2xl relative'>
-								<img
-									src={
-										movie.poster_url ||
-										'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.vecteezy.com%2Fsystem%2Fresources%2Fpreviews%2F048%2F910%2F778%2Fnon_2x%2Fdefault-image-missing-placeholder-free-vector.jpg&f=1&nofb=1&ipt=93339020a140657a560ee8c01ec1a6a81156aded326d1ae7d41e8912d97d5896&ipo=images'
-									}
-									alt={movie.title || 'Film poszter'}
-									className='w-full h-full object-cover'
-								/>
-
-								<button
-									onClick={(e) => handleFavoriteToggle(movie.id, e)}
-									className='absolute top-3 right-3 btn btn-circle btn-sm bg-base-100/80 hover:bg-base-100 border-none shadow-md text-lg'
-									title={
-										isFavorite ? 'Eltávolítás a kedvencekből' : 'Hozzáadás a kedvencekhez'
-									}
-								>
-									{isFavorite ? '❤️' : '🤍'}
-								</button>
-							</figure>
-
-							<div className='card-body p-5 flex flex-col justify-between flex-grow text-center'>
-								<div>
-									<h2 className='card-title text-base justify-center text-center mb-1 flex items-center flex-wrap gap-2'>
-										<span>{movie.title || 'Ismeretlen cím'}</span>
-										{movie.isNew === 1 && (
-											<span className='badge badge-secondary badge-sm font-bold'>
-												ÚJ
-											</span>
-										)}
-									</h2>
-
-									<div className='flex justify-center items-center gap-1 text-sm font-semibold mb-2 text-warning'>
-										<span>
-											⭐{' '}
-											{stats.averageRating > 0 ? stats.averageRating : 'Nincs értékelés'}
-										</span>
-										{stats.totalVotes > 0 && (
-											<span className='text-xs text-gray-500 font-normal'>
-												({stats.totalVotes})
-											</span>
-										)}
-									</div>
-
-									<p className='text-xs text-gray-500 line-clamp-2'>
-										{movie.description || 'Nincs elérhető leírás a filmhez.'}
-									</p>
-								</div>
-							</div>
-						</Link>
-					);
-				})}
+				{filteredMovies.map((movie) => renderMovieCard(movie))}
 			</div>
 		</div>
 	);
