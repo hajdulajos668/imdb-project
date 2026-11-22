@@ -444,11 +444,13 @@ app.get('/api/admin/ratings', verifyAdmin, async (req, res) => {
 app.delete('/api/admin/ratings/:id', verifyAdmin, async (req, res) => {
 	const ratingId = req.params.id;
 	try {
-		await db.query('DELETE FROM ratings WHERE id = ?', [ratingId]);
-		res.status(200).json({ message: 'Vélemény sikeresen törölve!' });
+		await db.query('UPDATE ratings SET is_deleted = 1, review_text = NULL WHERE id = ?', [
+			ratingId,
+		]);
+		res.status(200).json({ message: 'Vélemény moderálva (eltávolítva)!' });
 	} catch (err) {
-		console.error('Hiba a vélemény törlésekor:', err);
-		res.status(500).json({ error: 'Nem sikerült törölni a véleményt.' });
+		console.error('Hiba a vélemény moderálásakor:', err);
+		res.status(500).json({ error: 'Nem sikerült eltávolítani a véleményt.' });
 	}
 });
 

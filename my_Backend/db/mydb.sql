@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 20, 2026 at 09:02 AM
+-- Generation Time: Nov 22, 2026 at 08:28 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -108,22 +108,23 @@ CREATE TABLE `ratings` (
   `rating` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `review_text` text DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `is_deleted` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `ratings`
 --
 
-INSERT INTO `ratings` (`id`, `user_id`, `movie_id`, `rating`, `created_at`, `review_text`, `updated_at`) VALUES
-(2, 7, 1, 4, '2026-11-13 11:13:04', NULL, '2026-11-16 09:43:31'),
-(6, 8, 1, 5, '2026-11-13 11:14:30', NULL, '2026-11-16 09:43:31'),
-(7, 8, 2, 5, '2026-11-13 11:33:16', NULL, '2026-11-16 09:43:31'),
-(10, 7, 2, 4, '2026-11-16 09:59:42', 'Nagyon tetszett, jó film!', '2026-11-16 09:59:42'),
-(12, 10, 1, 5, '2026-11-17 12:39:07', 'asdasdasdasdasdasdas', '2026-11-17 12:39:07'),
-(13, 10, 2, 5, '2026-11-17 12:42:17', 'dawdawdawd', '2026-11-17 12:42:17'),
-(14, 10, 3, 5, '2026-11-17 12:42:25', 'dawdawdaawdawd', '2026-11-17 12:42:25'),
-(15, 10, 4, 5, '2026-11-17 12:42:33', 'awdawdawdawdaw', '2026-11-17 12:42:33');
+INSERT INTO `ratings` (`id`, `user_id`, `movie_id`, `rating`, `created_at`, `review_text`, `updated_at`, `is_deleted`) VALUES
+(6, 8, 1, 5, '2026-11-13 11:14:30', NULL, '2026-11-22 07:26:35', 1),
+(7, 8, 2, 5, '2026-11-13 11:33:16', NULL, '2026-11-16 09:43:31', 0),
+(10, 7, 2, 4, '2026-11-16 09:59:42', 'Nagyon tetszett, jó film!', '2026-11-16 09:59:42', 0),
+(12, 10, 1, 5, '2026-11-17 12:39:07', 'asdasdasdasdasdasdas', '2026-11-17 12:39:07', 0),
+(13, 10, 2, 5, '2026-11-17 12:42:17', 'dawdawdawd', '2026-11-17 12:42:17', 0),
+(14, 10, 3, 5, '2026-11-17 12:42:25', 'dawdawdaawdawd', '2026-11-17 12:42:25', 0),
+(15, 10, 4, 5, '2026-11-17 12:42:33', 'awdawdawdawdaw', '2026-11-17 12:42:33', 0),
+(17, 11, 1, 5, '2026-11-22 07:27:32', 'welkfnaonwfoiawfawf', '2026-11-22 07:27:32', 0);
 
 -- --------------------------------------------------------
 
@@ -244,7 +245,7 @@ ALTER TABLE `movies`
 -- AUTO_INCREMENT for table `ratings`
 --
 ALTER TABLE `ratings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `users`
