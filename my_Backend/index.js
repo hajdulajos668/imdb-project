@@ -454,6 +454,43 @@ app.delete('/api/admin/ratings/:id', verifyAdmin, async (req, res) => {
 	}
 });
 
+// Összes felhasználó lekérése (Csak adminoknak)
+app.get('/api/admin/users', verifyAdmin, async (req, res) => {
+    try {
+        const [users] = await db.query(
+            'SELECT id, name, email, is_admin, created_at FROM users ORDER BY created_at DESC'
+        );
+        res.status(200).json(users);
+    } catch (err) {
+        console.error('Hiba a felhasználók lekérésekor:', err);
+        res.status(500).json({ error: 'Adatbázis hiba a felhasználók betöltésekor.' });
+    }
+});
+
+// Felhasználó törlése ID alapján (Csak adminoknak)
+app.delete('/api/admin/users/:id', verifyAdmin, async (req, res) => {
+    const targetUserId = Number(req.params.id);
+    const adminUserId = Number(req.headers['user-id']);
+
+    if (targetUserId === adminUserId) {
+        return res.status(400).json({ error: 'Saját magadat nem törölheted ki!' });
+    }
+
+    try {
+        await db.query('DELETE FROM ratings WHERE user_id = ?', [targetUserId]);
+        await db.query('DELETE FROM watchlist WHERE user_id = ?', [targetUserId]);
+        await db.query('DELETE FROM favorites WHERE user_id = ?', [targetUserId]);
+
+        // Majd töröljük magát a felhasználót
+        await db.query('DELETE FROM users WHERE id = ?', [targetUserId]);
+        
+        res.status(200).json({ message: 'Felhasználó és minden adata sikeresen törölve!' });
+    } catch (err) {
+        console.error('Hiba a felhasználó törlésekor:', err);
+        res.status(500).json({ error: 'Nem sikerült törölni a felhasználót.' });
+    }
+});
+
 // Server start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
