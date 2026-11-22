@@ -14,6 +14,8 @@ function AdminPage() {
 	const [posterUrl, setPosterUrl] = useState('');
 	const [description, setDescription] = useState('');
 	const [isNew, setIsNew] = useState(true);
+	// Új state a véleményeknek
+	const [reviews, setReviews] = useState([]);
 
 	const user = JSON.parse(localStorage.getItem('user'));
 
@@ -39,6 +41,7 @@ function AdminPage() {
 
 	useEffect(() => {
 		fetchMovies();
+		fetchReviews();
 	}, []);
 
 	// Új film beküldése
@@ -92,6 +95,41 @@ function AdminPage() {
 		} catch (err) {
 			console.error('Hiba a törléskor:', err);
 			showMessage('error', err.response?.data?.error || 'Nem sikerült törölni a filmet.');
+		}
+	};
+
+	// Vélemények lekérése
+	const fetchReviews = async () => {
+		try {
+			const res = await api.get('/api/admin/ratings', {
+				headers: { 'user-id': user.id },
+			});
+			setReviews(res.data);
+		} catch (err) {
+			console.error('Hiba a vélemények lekérésekor:', err);
+			showMessage('error', 'Nem sikerült betölteni a véleményeket.');
+		}
+	};
+
+	// Vélemény törlése
+	const handleDeleteReview = async (reviewId) => {
+		if (!window.confirm('Biztosan törölni szeretnéd ezt a véleményt?')) {
+			return;
+		}
+
+		try {
+			await api.delete(`/api/admin/ratings/${reviewId}`, {
+				headers: { 'user-id': user.id },
+			});
+			showMessage('success', 'Vélemény sikeresen törölve.');
+			setReviews(
+				reviews.map((r) =>
+					r.id === reviewId ? { ...r, is_deleted: 1, review_text: null } : r,
+				),
+			);
+		} catch (err) {
+			console.error('Hiba a törléskor:', err);
+			showMessage('error', err.response?.data?.error || 'Nem sikerült törölni a véleményt.');
 		}
 	};
 
@@ -322,8 +360,79 @@ function AdminPage() {
 
 				{activeTab === 'reviews' && (
 					<div>
-						<h2 className='text-xl font-bold mb-4'>Legutóbbi hozzászólások</h2>
-						<p className='text-gray-500 text-sm'>Ez a fül következik a felhasználók után.</p>
+						<h2 className='text-xl font-bold mb-4'>
+							Legutóbbi hozzászólások ({reviews.length})
+						</h2>
+
+						{reviews.length === 0 ? (
+							<p className='text-gray-500 text-sm italic'>
+								Jelenleg nincs egyetlen vélemény sem az adatbázisban.
+							</p>
+						) : (
+							<div className='overflow-x-auto'>
+								<table className='table table-zebra w-full'>
+									<thead>
+										<tr>
+											<th>Dátum</th>
+											<th>Felhasználó</th>
+											<th>Film</th>
+											<th>Értékelés</th>
+											<th>Szöveg</th>
+											<th className='text-right'>Művelet</th>
+										</tr>
+									</thead>
+									<tbody>
+										{reviews.map((rev) => (
+											<tr key={rev.id}>
+												<td className='text-xs text-gray-500 whitespace-nowrap'>
+													{new Date(rev.created_at).toLocaleString('hu-HU', {
+														year: 'numeric',
+														month: '2-digit',
+														day: '2-digit',
+														hour: '2-digit',
+														minute: '2-digit',
+													})}
+												</td>
+												<td className='font-semibold'>{rev.user_name}</td>
+												<td className='font-medium text-primary'>{rev.movie_title}</td>
+												<td className='whitespace-nowrap'>
+													{'⭐'.repeat(rev.rating)} ({rev.rating}/5)
+												</td>
+												<td className='max-w-md'>
+													{rev.is_deleted === 1 ? (
+														<span className='text-xs italic text-error font-semibold'>
+															Eltávolítva adminisztrátor által
+														</span>
+													) : rev.review_text ? (
+														<p className='text-sm whitespace-pre-line'>
+															{rev.review_text}
+														</p>
+													) : (
+														<span className='text-xs italic text-gray-400'>
+															Csak csillagos értékelés
+														</span>
+													)}
+												</td>
+												<td className='text-right'>
+													{rev.is_deleted === 1 ? (
+														<span className='badge badge-ghost badge-sm'>
+															Moderálva
+														</span>
+													) : (
+														<button
+															onClick={() => handleDeleteReview(rev.id)}
+															className='btn btn-error btn-xs text-white'
+														>
+															Eltávolítás
+														</button>
+													)}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						)}
 					</div>
 				)}
 			</div>

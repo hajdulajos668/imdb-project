@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 
 function MovieDetails() {
@@ -33,7 +33,7 @@ function MovieDetails() {
 
 			if (user) {
 				const existingVote = ratingsRes.data.ratings.find((r) => r.user_id === user.id);
-				if (existingVote) {
+				if (existingVote && existingVote.is_deleted !== 1) {
 					setUserRating(existingVote.rating);
 					setReviewText(existingVote.review_text || '');
 				}
@@ -427,7 +427,11 @@ function MovieDetails() {
 											</div>
 										</div>
 
-										{rev.review_text ? (
+										{rev.is_deleted === 1 ? (
+											<p className='text-error/80 text-xs italic pl-13 font-medium'>
+												🚫 Eltávolítva adminisztrátor által
+											</p>
+										) : rev.review_text ? (
 											<p className='text-base-content/90 text-sm leading-relaxed whitespace-pre-line pl-13'>
 												{rev.review_text}
 											</p>
