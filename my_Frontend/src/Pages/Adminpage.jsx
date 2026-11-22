@@ -16,6 +16,8 @@ function AdminPage() {
 	const [isNew, setIsNew] = useState(true);
 	// Új state a véleményeknek
 	const [reviews, setReviews] = useState([]);
+	// Új state a felhasználóknak
+	const [usersList, setUsersList] = useState([]);
 
 	const user = JSON.parse(localStorage.getItem('user'));
 
@@ -42,6 +44,7 @@ function AdminPage() {
 	useEffect(() => {
 		fetchMovies();
 		fetchReviews();
+		fetchUsers();
 	}, []);
 
 	// Új film beküldése
@@ -130,6 +133,41 @@ function AdminPage() {
 		} catch (err) {
 			console.error('Hiba a törléskor:', err);
 			showMessage('error', err.response?.data?.error || 'Nem sikerült törölni a véleményt.');
+		}
+	};
+
+	// Felhasználók lekérése
+	const fetchUsers = async () => {
+		try {
+			const res = await api.get('/api/admin/users', {
+				headers: { 'user-id': user.id },
+			});
+			setUsersList(res.data);
+		} catch (err) {
+			console.error('Hiba a felhasználók lekérésekor:', err);
+			showMessage('error', 'Nem sikerült betölteni a felhasználókat.');
+		}
+	};
+
+	// Felhasználó törlése
+	const handleDeleteUser = async (targetUserId, targetUserName) => {
+		if (
+			!window.confirm(
+				`Biztosan véglegesen törölni szeretnéd "${targetUserName}" fiókját és minden értékelését?`,
+			)
+		) {
+			return;
+		}
+
+		try {
+			await api.delete(`/api/admin/users/${targetUserId}`, {
+				headers: { 'user-id': user.id },
+			});
+			showMessage('success', 'Felhasználó sikeresen törölve.');
+			setUsersList(usersList.filter((u) => u.id !== targetUserId));
+		} catch (err) {
+			console.error('Hiba a törléskor:', err);
+			showMessage('error', err.response?.data?.error || 'Nem sikerült törölni a felhasználót.');
 		}
 	};
 
@@ -353,8 +391,80 @@ function AdminPage() {
 
 				{activeTab === 'users' && (
 					<div>
-						<h2 className='text-xl font-bold mb-4'>Regisztrált felhasználók</h2>
-						<p className='text-gray-500 text-sm'>Ez a fül következik a filmek után.</p>
+						<h2 className='text-xl font-bold mb-4'>
+							Regisztrált felhasználók ({usersList.length})
+						</h2>
+
+						{usersList.length === 0 ? (
+							<p className='text-gray-500 text-sm italic'>
+								Nincs megjeleníthető felhasználó.
+							</p>
+						) : (
+							<div className='overflow-x-auto'>
+								<table className='table table-zebra w-full'>
+									<thead>
+										<tr>
+											<th>ID</th>
+											<th>Név</th>
+											<th>Email cím</th>
+											<th>Regisztráció</th>
+											<th>Szerepkör</th>
+											<th className='text-right'>Művelet</th>
+										</tr>
+									</thead>
+									<tbody>
+										{usersList.map((u) => {
+											const isCurrentUser = u.id === user.id;
+
+											return (
+												<tr key={u.id}>
+													<td className='font-mono text-xs text-gray-500'>#{u.id}</td>
+													<td className='font-bold'>
+														{u.name}
+														{isCurrentUser && (
+															<span className='badge badge-info badge-xs ml-2'>
+																Te
+															</span>
+														)}
+													</td>
+													<td>{u.email}</td>
+													<td className='text-xs text-gray-500'>
+														{u.created_at
+															? new Date(u.created_at).toLocaleDateString('hu-HU')
+															: '-'}
+													</td>
+													<td>
+														{u.is_admin === 1 ? (
+															<span className='badge badge-primary badge-sm font-semibold'>
+																Admin
+															</span>
+														) : (
+															<span className='badge badge-ghost badge-sm'>
+																Felhasználó
+															</span>
+														)}
+													</td>
+													<td className='text-right'>
+														<button
+															onClick={() => handleDeleteUser(u.id, u.name)}
+															disabled={isCurrentUser}
+															className='btn btn-error btn-xs text-white'
+															title={
+																isCurrentUser
+																	? 'Saját fiókodat nem törölheted'
+																	: 'Felhasználó törlése'
+															}
+														>
+															Törlés
+														</button>
+													</td>
+												</tr>
+											);
+										})}
+									</tbody>
+								</table>
+							</div>
+						)}
 					</div>
 				)}
 
