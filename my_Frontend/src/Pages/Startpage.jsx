@@ -63,9 +63,14 @@ function SideMenu() {
 						>
 							👤 Profil
 						</button>
-						<button className='btn btn-ghost justify-start text-base'>⭐ Toplista</button>
-						<button className='btn btn-ghost justify-start text-base'>
-							📊 Nézői statisztika
+						<button
+							onClick={() => {
+								setIsOpen(false);
+								navigate('/toplist');
+							}}
+							className='btn btn-ghost justify-start text-base'
+						>
+							⭐ Toplista
 						</button>
 					</div>
 				</div>
